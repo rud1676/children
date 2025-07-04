@@ -3,13 +3,21 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowLeft, User, Heart, Star, Trash2 } from 'lucide-react';
+import {
+  ArrowLeft,
+  User,
+  Heart,
+  Star,
+  Trash2,
+  MessageSquare,
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 import { apiFetch } from '../../../lib/config';
 
 export default function StudentDetailPage() {
   const [student, setStudent] = useState(null);
   const [praises, setPraises] = useState([]);
+  const [writtenStats, setWrittenStats] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [showDeleted, setShowDeleted] = useState(false);
@@ -33,6 +41,7 @@ export default function StudentDetailPage() {
 
     setUser(currentUser);
     fetchStudentData();
+    fetchWrittenStats();
   }, [params.id, showDeleted]);
 
   const fetchStudentData = async () => {
@@ -61,6 +70,30 @@ export default function StudentDetailPage() {
       router.push('/');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchWrittenStats = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await apiFetch(
+        `/api/users/students/${params.id}/written-stats`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        setWrittenStats(data);
+      } else {
+        console.error('작성 칭찬 통계 조회 실패:', data.error);
+      }
+    } catch (error) {
+      console.error('작성 칭찬 통계 조회 오류:', error);
     }
   };
 
@@ -157,20 +190,29 @@ export default function StudentDetailPage() {
               <p className='pixel-font text-sm text-green-600'>
                 {student.school} {student.grade}학년 {student.class_number}반
               </p>
-              <div className='flex items-center space-x-4 mt-2'>
-                <div className='flex items-center space-x-1'>
-                  <Heart className='h-4 w-4 text-red-500' />
-                  <span className='pixel-font text-sm text-green-700'>
-                    선택된 칭찬: {praises.filter((p) => p.is_selected).length}개
-                  </span>
+
+              {/* 작성한 칭찬 통계 */}
+              {writtenStats && (
+                <div className='flex items-center space-x-4 mt-2 pt-2 border-t border-green-200'>
+                  <div className='flex items-center space-x-1'>
+                    <MessageSquare className='h-4 w-4 text-blue-500' />
+                    <span className='pixel-font text-sm text-blue-700'>
+                      작성한 칭찬: {writtenStats.totalCount}개
+                    </span>
+                  </div>
+                  <div className='flex items-center space-x-1'>
+                    <Heart className='h-4 w-4 text-purple-500' />
+                    <span className='pixel-font text-sm text-purple-700'>
+                      선택받은 칭찬: {writtenStats.selectedCount}개
+                    </span>
+                  </div>
+                  <div className='flex items-center space-x-1'>
+                    <span className='pixel-font text-sm text-purple-600'>
+                      선택률: {writtenStats.selectionRate}%
+                    </span>
+                  </div>
                 </div>
-                <div className='flex items-center space-x-1'>
-                  <Star className='h-4 w-4 text-yellow-500' />
-                  <span className='pixel-font text-sm text-green-600'>
-                    총 칭찬: {praises.length}개
-                  </span>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </div>

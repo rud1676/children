@@ -3,7 +3,7 @@ import { db } from '../../../lib/database';
 
 export async function GET(request) {
   try {
-    // 선택된 칭찬 개수 순으로 랭킹 조회
+    // 작성한 칭찬 중 선택받은 개수 순으로 랭킹 조회
     const getRanking = db.prepare(`
       SELECT 
         u.id,
@@ -16,7 +16,7 @@ export async function GET(request) {
         COUNT(CASE WHEN p.is_deleted = 0 THEN 1 END) as total_praises_count,
         ROW_NUMBER() OVER (ORDER BY COUNT(CASE WHEN p.is_selected = 1 AND p.is_deleted = 0 THEN 1 END) DESC) as rank
       FROM users u
-      LEFT JOIN praises p ON u.id = p.to_user_id AND p.is_deleted = 0
+      LEFT JOIN praises p ON u.id = p.from_user_id AND p.is_deleted = 0
       WHERE u.role = 'student'
       GROUP BY u.id
       HAVING NOT (
@@ -24,6 +24,7 @@ export async function GET(request) {
         AND
         COUNT(CASE WHEN p.is_selected = 1 AND p.is_deleted = 0 THEN 1 END) < 5
       )
+      AND COUNT(CASE WHEN p.is_selected = 1 AND p.is_deleted = 0 THEN 1 END) > 0
       ORDER BY selected_praises_count DESC, u.name ASC
     `);
 
