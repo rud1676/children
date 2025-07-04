@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { db } from '../../../lib/database';
 
+// 동적 렌더링 강제
+export const dynamic = 'force-dynamic';
+
 export async function GET(request) {
   try {
     // 작성한 칭찬 중 선택받은 개수 순으로 랭킹 조회

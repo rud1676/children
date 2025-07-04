@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { db } from '../../../../lib/database';
 
+// 동적 렌더링 강제
+export const dynamic = 'force-dynamic';
+
 export async function GET(request) {
   try {
     // 학생 목록 조회 (선택된 칭찬 개수 포함)
