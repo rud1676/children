@@ -5,7 +5,6 @@ import { verifyToken } from '../../../../../lib/auth';
 export async function POST(request, { params }) {
   try {
     const { id } = params;
-    const { is_selected } = await request.json();
 
     // 토큰에서 사용자 정보 추출
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
@@ -22,43 +21,77 @@ export async function POST(request, { params }) {
       );
     }
 
-    // 선생님 권한 확인
-    if (userData.role !== 'teacher') {
-      return NextResponse.json(
-        { error: '선생님만 접근할 수 있습니다' },
-        { status: 403 }
-      );
-    }
-
-    // 칭찬 정보 조회
     const connection = await pool.getConnection();
-    const [praises] = await connection.execute(
-      'SELECT * FROM praises WHERE id = ? AND is_deleted = 0',
-      [id]
-    );
 
-    if (praises.length === 0) {
-      connection.release();
-      return NextResponse.json(
-        { error: '칭찬을 찾을 수 없습니다' },
-        { status: 404 }
+    try {
+      // 칭찬 정보 조회
+      const [praises] = await connection.execute(
+        'SELECT * FROM praises WHERE id = ?',
+        [id]
       );
+
+      if (praises.length === 0) {
+        return NextResponse.json(
+          { error: '칭찬을 찾을 수 없습니다' },
+          { status: 404 }
+        );
+      }
+
+      const praise = praises[0];
+      if (userData.role === 'student' && praise.from_user_role === 'teacher') {
+        return NextResponse.json(
+          {
+            error: '학생은 선생님이 작성한 칭찬에는 좋아요를 누를 수 없습니다',
+          },
+          { status: 403 }
+        );
+      }
+
+      // 자신의 칭찬만 선택 가능하도록 확인
+      if (praise.to_user_id !== userData.id) {
+        return NextResponse.json(
+          { error: '자신의 칭찬만 선택할 수 있습니다' },
+          { status: 403 }
+        );
+      }
+
+      // 현재 선택 상태를 반전 (토글)
+      const newSelectionState = praise.is_selected ? 0 : 1;
+
+      // 선택하려는 경우, 이미 선택된 칭찬이 5개 이상인지 확인
+      if (newSelectionState === 1) {
+        const [selectedCountResult] = await connection.execute(
+          'SELECT COUNT(*) as count FROM praises WHERE to_user_id = ? AND is_selected = 1',
+          [userData.id]
+        );
+        const selectedCount = selectedCountResult[0].count;
+
+        if (selectedCount >= 3) {
+          return NextResponse.json(
+            { error: '선택된 칭찬은 최대 3개까지 가능합니다' },
+            { status: 400 }
+          );
+        }
+      }
+
+      // 칭찬 선택/해제 처리
+      await connection.execute(
+        'UPDATE praises SET is_selected = ? WHERE id = ?',
+        [newSelectionState, id]
+      );
+
+      return NextResponse.json({
+        success: true,
+        message: newSelectionState
+          ? '칭찬이 선택되었습니다'
+          : '칭찬 선택이 해제되었습니다',
+        is_selected: newSelectionState === 1,
+      });
+    } finally {
+      connection.release();
     }
-
-    // 선택 상태 업데이트
-    await connection.execute(
-      'UPDATE praises SET is_selected = ? WHERE id = ?',
-      [is_selected, id]
-    );
-
-    connection.release();
-
-    return NextResponse.json({
-      success: true,
-      message: '칭찬 선택 상태가 업데이트되었습니다',
-    });
   } catch (error) {
-    console.error('칭찬 선택 에러:', error);
+    console.error('칭찬 선택 처리 에러:', error);
     return NextResponse.json(
       { error: '서버 오류가 발생했습니다' },
       { status: 500 }

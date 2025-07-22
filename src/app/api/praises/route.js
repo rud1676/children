@@ -67,8 +67,14 @@ export async function POST(request) {
 
       // 칭찬 작성
       const [result] = await connection.execute(
-        'INSERT INTO praises (from_user_id, to_user_id, content) VALUES (?, ?, ?)',
-        [userData.id, to_user_id, content]
+        'INSERT INTO praises (from_user_id, to_user_id, content, is_teacher, is_myteam) VALUES (?, ?, ?, ?, ?)',
+        [
+          userData.id,
+          to_user_id,
+          content,
+          userData.role === 'teacher' ? 1 : 0,
+          userData.class_number === toUsers[0].class_number ? 1 : 0,
+        ]
       );
 
       // 받는 학생의 칭찬 개수 확인
@@ -79,8 +85,8 @@ export async function POST(request) {
 
       const praiseCount = praiseCountResult[0].count;
 
-      // 최초 5개 칭찬은 자동 선택
-      if (praiseCount <= 5) {
+      // 최초 3개 칭찬은 자동 선택
+      if (praiseCount <= 3) {
         await connection.execute(
           'UPDATE praises SET is_selected = 1 WHERE id = ?',
           [result.insertId]

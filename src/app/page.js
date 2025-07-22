@@ -222,15 +222,15 @@ export default function MainPage() {
         <div className='flex items-center justify-between mb-6'>
           {/* 랭킹 카드 (PC) */}
           <div className='hidden lg:flex items-center mr-4'>
-            <div className='nature-light pixel-border rounded-lg p-2 min-w-[700px] flex flex-col items-center shadow-sm bg-white/80 backdrop-blur-sm'>
+            <div className='nature-light pixel-border rounded-lg p-2 min-w-[530px] flex flex-col items-center shadow-sm bg-white/80 backdrop-blur-sm'>
               <div className='flex items-center space-x-1 mb-1'>
                 <Trophy className='h-4 w-4 text-yellow-500' />
                 <span className='font-sans text-base font-bold text-green-800'>
-                  TOP 15
+                  TOP 10
                 </span>
               </div>
-              <div className='grid grid-cols-[repeat(15,minmax(0,1fr))] gap-1 w-full'>
-                {ranking.map((student, index) => (
+              <div className='grid grid-cols-[repeat(10,minmax(0,1fr))] gap-1 w-full'>
+                {ranking.slice(0, 10).map((student, index) => (
                   <div
                     key={student.id}
                     className='flex flex-col items-center justify-center w-12 h-16 bg-green-100 rounded px-0.5'
@@ -254,7 +254,7 @@ export default function MainPage() {
 
           {/* 제목 */}
           <div className=''>
-            <h1 className='flight-font-title ext-[35px] text-green-800 mb-2 text-center'>
+            <h1 className='flight-font-title text-[35px] text-green-800 mb-2 text-center'>
               레벨업: 리셋 에디션
             </h1>
             <div className='flex flex-col items-center mt-1'>
@@ -371,15 +371,13 @@ export default function MainPage() {
                   <MessageSquare className='h-4 w-4' />
                   <span className='flight-font text-sm'>내가 작성한 칭찬</span>
                 </button>
-                {user?.role === 'student' && (
-                  <button
-                    onClick={handleWritePraise}
-                    className='flex items-center space-x-2 w-full p-2 hover:bg-green-100 rounded text-green-600'
-                  >
-                    <Plus className='h-4 w-4' />
-                    <span className='flight-font text-sm'>칭찬 작성</span>
-                  </button>
-                )}
+                <button
+                  onClick={handleWritePraise}
+                  className='flex items-center space-x-2 w-full p-2 hover:bg-green-100 rounded text-green-600'
+                >
+                  <Plus className='h-4 w-4' />
+                  <span className='flight-font text-sm'>칭찬 작성</span>
+                </button>
                 <button
                   onClick={handleLogout}
                   className='flex items-center space-x-2 w-full p-2 hover:bg-red-100 rounded text-red-600'

@@ -26,7 +26,7 @@ export default function StudentCard({ student, isTeacher = false, onClick }) {
         </h3>
       </div>
 
-      {/* 칭찬 목록 - 5개 공간 고정 */}
+      {/* 칭찬 목록 - 3개 공간 고정 */}
       <div className='space-y-3'>
         {displayPraises.slice(0, 3).map((praise, index) => (
           <motion.div
@@ -34,14 +34,14 @@ export default function StudentCard({ student, isTeacher = false, onClick }) {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.1 }}
-            className={`h-16 flex flex-col justify-center ${
+            className={`h-18 flex flex-col justify-center ${
               praise
                 ? 'bg-white/70 backdrop-blur-sm rounded p-3 border-l-4 border-green-400'
                 : 'bg-gray-50/50 backdrop-blur-sm rounded p-3 border-l-4 border-gray-200'
             }`}
           >
             {praise ? (
-              <p className='flight-font text-xs text-green-800 leading-relaxed line-clamp-2'>
+              <p className='flight-font text-[20px] text-green-800 leading-relaxed line-clamp-2 break-words'>
                 {praise.content}
               </p>
             ) : (

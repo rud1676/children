@@ -18,6 +18,7 @@ export async function GET(request) {
           u.grade,
           u.class_number,
           u.student_number,
+          u.is_king,
           COUNT(CASE WHEN p.is_selected = 1 AND p.is_deleted = 0 THEN 1 END) as selected_praises_count,
           COUNT(CASE WHEN p.is_deleted = 0 THEN 1 END) as total_praises_count,
           ROW_NUMBER() OVER (ORDER BY COUNT(CASE WHEN p.is_selected = 1 AND p.is_deleted = 0 THEN 1 END) DESC) as ranking_position
@@ -44,6 +45,7 @@ export async function GET(request) {
           grade: student.grade,
           class_number: student.class_number,
           student_number: student.student_number,
+          is_king: student.is_king,
           selected_praises_count: student.selected_praises_count || 0,
           total_praises_count: student.total_praises_count || 0,
         })),

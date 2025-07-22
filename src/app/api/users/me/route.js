@@ -43,6 +43,7 @@ export async function GET(request) {
         name: user.name,
         phone_number: user.phone_number,
         role: user.role,
+        is_king: user.is_king,
         school: user.school,
         grade: user.grade,
         class_number: user.class_number,
