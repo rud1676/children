@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db, bcrypt } from '../../../../lib/database';
+import { pool, bcrypt } from '../../../../lib/database';
 import { generateToken } from '../../../../lib/auth';
 
 export async function POST(request) {
@@ -14,18 +14,25 @@ export async function POST(request) {
     }
 
     // 사용자 조회
-    const getUser = db.prepare('SELECT * FROM users WHERE phone_number = ?');
-    const user = getUser.get(phone_number);
+    const connection = await pool.getConnection();
+    const [users] = await connection.execute(
+      'SELECT * FROM users WHERE phone_number = ?',
+      [phone_number]
+    );
 
-    if (!user) {
+    if (users.length === 0) {
+      connection.release();
       return NextResponse.json(
         { error: '등록되지 않은 핸드폰 번호입니다' },
         { status: 404 }
       );
     }
 
+    const user = users[0];
+
     // 이미 비밀번호가 설정되어 있는지 확인
     if (user.password) {
+      connection.release();
       return NextResponse.json(
         { error: '이미 비밀번호가 설정되어 있습니다' },
         { status: 400 }
@@ -36,12 +43,12 @@ export async function POST(request) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // 비밀번호 업데이트
-    const updatePassword = db.prepare(`
-      UPDATE users 
-      SET password = ?, is_first_login = FALSE 
-      WHERE phone_number = ?
-    `);
-    updatePassword.run(hashedPassword, phone_number);
+    await connection.execute(
+      'UPDATE users SET password = ?, is_first_login = FALSE WHERE phone_number = ?',
+      [hashedPassword, phone_number]
+    );
+
+    connection.release();
 
     // 토큰 생성
     const token = generateToken(user);

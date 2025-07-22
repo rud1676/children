@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '../../../../../../lib/database';
+import { pool } from '../../../../../../lib/database';
 import { verifyToken } from '../../../../../../lib/auth';
 
 export async function GET(request, { params }) {
@@ -29,33 +29,37 @@ export async function GET(request, { params }) {
 
     const studentId = params.id;
 
-    // 해당 학생이 작성한 칭찬 중 선택받은 칭찬 개수
-    const getSelectedWrittenPraises = db.prepare(`
-      SELECT COUNT(*) as count 
-      FROM praises 
-      WHERE from_user_id = ? AND is_selected = 1 AND is_deleted = 0
-    `);
-    const selectedWrittenPraises = getSelectedWrittenPraises.get(studentId);
+    const connection = await pool.getConnection();
 
-    // 해당 학생이 작성한 총 칭찬 개수
-    const getTotalWrittenPraises = db.prepare(`
-      SELECT COUNT(*) as count 
-      FROM praises 
-      WHERE from_user_id = ? AND is_deleted = 0
-    `);
-    const totalWrittenPraises = getTotalWrittenPraises.get(studentId);
+    try {
+      // 해당 학생이 작성한 칭찬 중 선택받은 칭찬 개수
+      const [selectedWrittenPraisesResult] = await connection.execute(
+        'SELECT COUNT(*) as count FROM praises WHERE from_user_id = ? AND is_selected = 1 AND is_deleted = 0',
+        [studentId]
+      );
+      const selectedWrittenPraises = selectedWrittenPraisesResult[0];
 
-    const totalCount = totalWrittenPraises.count;
-    const selectedCount = selectedWrittenPraises.count;
-    const selectionRate =
-      totalCount > 0 ? Math.round((selectedCount / totalCount) * 100) : 0;
+      // 해당 학생이 작성한 총 칭찬 개수
+      const [totalWrittenPraisesResult] = await connection.execute(
+        'SELECT COUNT(*) as count FROM praises WHERE from_user_id = ? AND is_deleted = 0',
+        [studentId]
+      );
+      const totalWrittenPraises = totalWrittenPraisesResult[0];
 
-    return NextResponse.json({
-      success: true,
-      totalCount,
-      selectedCount,
-      selectionRate,
-    });
+      const totalCount = totalWrittenPraises.count;
+      const selectedCount = selectedWrittenPraises.count;
+      const selectionRate =
+        totalCount > 0 ? Math.round((selectedCount / totalCount) * 100) : 0;
+
+      return NextResponse.json({
+        success: true,
+        totalCount,
+        selectedCount,
+        selectionRate,
+      });
+    } finally {
+      connection.release();
+    }
   } catch (error) {
     console.error('학생 작성 칭찬 통계 조회 에러:', error);
     return NextResponse.json(

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '../../../../lib/database';
+import { pool } from '../../../../lib/database';
 import { verifyToken } from '../../../../lib/auth';
 
 export async function GET(request) {
@@ -20,15 +20,21 @@ export async function GET(request) {
     }
 
     // 사용자 정보 조회
-    const getUser = db.prepare('SELECT * FROM users WHERE id = ?');
-    const user = getUser.get(userData.id);
+    const connection = await pool.getConnection();
+    const [users] = await connection.execute(
+      'SELECT * FROM users WHERE id = ?',
+      [userData.id]
+    );
+    connection.release();
 
-    if (!user) {
+    if (users.length === 0) {
       return NextResponse.json(
         { error: '사용자를 찾을 수 없습니다' },
         { status: 404 }
       );
     }
+
+    const user = users[0];
 
     return NextResponse.json({
       success: true,

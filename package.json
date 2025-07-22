@@ -7,7 +7,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "createdb": "node src/lib/create-db.js",
+    "dropdb": "node src/lib/drop-db.js",
+    "initdata": "node src/lib/init-db.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
@@ -15,6 +18,7 @@
     "framer-motion": "^12.23.0",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.525.0",
+    "mysql2": "^3.14.2",
     "next": "14.2.15",
     "react": "^18",
     "react-dom": "^18",

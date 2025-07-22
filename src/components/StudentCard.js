@@ -28,7 +28,7 @@ export default function StudentCard({ student, isTeacher = false, onClick }) {
 
       {/* 칭찬 목록 - 5개 공간 고정 */}
       <div className='space-y-3'>
-        {displayPraises.map((praise, index) => (
+        {displayPraises.slice(0, 3).map((praise, index) => (
           <motion.div
             key={index}
             initial={{ opacity: 0, x: -20 }}

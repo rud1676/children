@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '../../../../lib/database';
+import { pool } from '../../../../lib/database';
 import { verifyToken } from '../../../../lib/auth';
 
 export async function GET(request) {
@@ -18,7 +18,6 @@ export async function GET(request) {
         { status: 403 }
       );
     }
-
     // 선생님 권한 확인
     if (userData.role !== 'teacher') {
       return NextResponse.json(
@@ -28,14 +27,14 @@ export async function GET(request) {
     }
 
     // 모든 학생 조회
-    const getStudents = db.prepare(`
-      SELECT id, name, school, grade, class, student_number
+    const connection = await pool.getConnection();
+    const [students] = await connection.execute(`
+      SELECT id, name, school, grade, class_number, student_number
       FROM users 
       WHERE role = 'student'
-      ORDER BY school, grade, class, student_number
+      ORDER BY school, grade, class_number, student_number
     `);
-
-    const students = getStudents.all();
+    connection.release();
 
     return NextResponse.json({
       success: true,

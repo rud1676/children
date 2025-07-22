@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '../../../../lib/database';
+import { pool } from '../../../../lib/database';
 
 // 동적 렌더링 강제
 export const dynamic = 'force-dynamic';
@@ -7,7 +7,8 @@ export const dynamic = 'force-dynamic';
 export async function GET(request) {
   try {
     // 학생 목록 조회 (선택된 칭찬 개수 포함)
-    const getStudents = db.prepare(`
+    const connection = await pool.getConnection();
+    const [students] = await connection.execute(`
       SELECT 
         u.id,
         u.name,
@@ -23,8 +24,7 @@ export async function GET(request) {
       GROUP BY u.id
       ORDER BY u.grade, u.class_number, u.student_number
     `);
-
-    const students = getStudents.all();
+    connection.release();
 
     return NextResponse.json({
       success: true,

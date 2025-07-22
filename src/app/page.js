@@ -253,10 +253,43 @@ export default function MainPage() {
           </div>
 
           {/* 제목 */}
-          <div className='flex-1 flex justify-center'>
-            <h1 className='flight-font-title text-2xl text-green-800 mb-2 text-center'>
-              길가에교회 청소년부 수련회 칭찬릴레이
+          <div className=''>
+            <h1 className='flight-font-title ext-[35px] text-green-800 mb-2 text-center'>
+              레벨업: 리셋 에디션
             </h1>
+            <div className='flex flex-col items-center mt-1'>
+              <div className='flex items-center space-x-2 px-3 py-1 rounded-full bg-gradient-to-r from-green-200 via-yellow-100 to-green-100 shadow-inner border border-green-300'>
+                <span className='text-green-700 font-bold text-[20px] flight-font animate-pulse'>
+                  칭찬으로 EXP 채우는 중…
+                </span>
+                <svg
+                  className='w-4 h-4 text-yellow-400 animate-bounce'
+                  fill='currentColor'
+                  viewBox='0 0 20 20'
+                >
+                  <path d='M10 2l2.39 4.84 5.34.78-3.87 3.77.91 5.32L10 13.27l-4.77 2.51.91-5.32-3.87-3.77 5.34-.78L10 2z' />
+                </svg>
+              </div>
+              <div className='h-1 w-32 bg-green-100 rounded-full mt-2 overflow-hidden'>
+                <div
+                  className='h-full bg-gradient-to-r from-green-400 to-yellow-300 animate-exp-bar'
+                  style={{ width: '70%' }}
+                ></div>
+              </div>
+              <style jsx>{`
+                @keyframes exp-bar {
+                  0% {
+                    width: 0%;
+                  }
+                  100% {
+                    width: 70%;
+                  }
+                }
+                .animate-exp-bar {
+                  animation: exp-bar 2s ease-in-out forwards;
+                }
+              `}</style>
+            </div>
           </div>
 
           {/* 미칭찬 카드 (PC) */}

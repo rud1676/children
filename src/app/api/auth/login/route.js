@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db, bcrypt } from '../../../../lib/database';
+import { pool, bcrypt } from '../../../../lib/database';
 import { generateToken } from '../../../../lib/auth';
 
 export async function POST(request) {
@@ -14,15 +14,21 @@ export async function POST(request) {
     }
 
     // 사용자 조회
-    const getUser = db.prepare('SELECT * FROM users WHERE phone_number = ?');
-    const user = getUser.get(phone_number);
+    const connection = await pool.getConnection();
+    const [users] = await connection.execute(
+      'SELECT * FROM users WHERE phone_number = ?',
+      [phone_number]
+    );
+    connection.release();
 
-    if (!user) {
+    if (users.length === 0) {
       return NextResponse.json(
         { error: '등록되지 않은 핸드폰 번호입니다' },
         { status: 404 }
       );
     }
+
+    const user = users[0];
 
     // 최초 로그인인 경우 (비밀번호가 설정되지 않음)
     if (!user.password) {

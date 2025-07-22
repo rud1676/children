@@ -57,7 +57,6 @@ export default function StudentDetailPage() {
       );
 
       const data = await response.json();
-
       if (data.success) {
         setStudent(data.user);
         setPraises(data.praises);

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '../../../../lib/database';
+import { pool } from '../../../../lib/database';
 import { verifyToken } from '../../../../lib/auth';
 
 export async function GET(request) {
@@ -20,15 +20,18 @@ export async function GET(request) {
     }
 
     // 받은 칭찬 조회
-    const getReceivedPraises = db.prepare(`
+    const connection = await pool.getConnection();
+    const [praises] = await connection.execute(
+      `
       SELECT p.*, u.name as from_name
       FROM praises p
       LEFT JOIN users u ON p.from_user_id = u.id
       WHERE p.to_user_id = ? AND p.is_deleted = 0
       ORDER BY p.created_at DESC
-    `);
-
-    const praises = getReceivedPraises.all(userData.id);
+    `,
+      [userData.id]
+    );
+    connection.release();
 
     return NextResponse.json({
       success: true,

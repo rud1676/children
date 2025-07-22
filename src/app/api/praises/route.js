@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '../../../lib/database';
+import { pool } from '../../../lib/database';
 import { verifyToken } from '../../../lib/auth';
 
 export async function POST(request) {
@@ -28,71 +28,73 @@ export async function POST(request) {
       );
     }
 
-    // 받는 사용자 확인
-    const getToUser = db.prepare(
-      "SELECT * FROM users WHERE id = ? AND role = 'student'"
-    );
-    const toUser = getToUser.get(to_user_id);
+    const connection = await pool.getConnection();
 
-    if (!toUser) {
-      return NextResponse.json(
-        { error: '받는 학생을 찾을 수 없습니다' },
-        { status: 404 }
+    try {
+      // 받는 사용자 확인
+      const [toUsers] = await connection.execute(
+        "SELECT * FROM users WHERE id = ? AND role = 'student'",
+        [to_user_id]
       );
-    }
 
-    // 자기 자신에게 칭찬을 달 수 없음
-    if (userData.id === to_user_id) {
-      return NextResponse.json(
-        { error: '자기 자신에게는 칭찬을 달 수 없습니다' },
-        { status: 400 }
+      if (toUsers.length === 0) {
+        return NextResponse.json(
+          { error: '받는 학생을 찾을 수 없습니다' },
+          { status: 404 }
+        );
+      }
+
+      // 자기 자신에게 칭찬을 달 수 없음
+      if (userData.id === to_user_id) {
+        return NextResponse.json(
+          { error: '자기 자신에게는 칭찬을 달 수 없습니다' },
+          { status: 400 }
+        );
+      }
+
+      // 이미 칭찬을 달았는지 확인
+      const [existing] = await connection.execute(
+        'SELECT id FROM praises WHERE from_user_id = ? AND to_user_id = ? AND is_deleted = 0',
+        [userData.id, to_user_id]
       );
-    }
 
-    // 이미 칭찬을 달았는지 확인
-    const checkExisting = db.prepare(`
-      SELECT id FROM praises 
-      WHERE from_user_id = ? AND to_user_id = ? AND is_deleted = 0
-    `);
-    const existing = checkExisting.get(userData.id, to_user_id);
+      if (existing.length > 0) {
+        return NextResponse.json(
+          { error: '이미 해당 학생에게 칭찬을 달았습니다' },
+          { status: 400 }
+        );
+      }
 
-    if (existing) {
-      return NextResponse.json(
-        { error: '이미 해당 학생에게 칭찬을 달았습니다' },
-        { status: 400 }
+      // 칭찬 작성
+      const [result] = await connection.execute(
+        'INSERT INTO praises (from_user_id, to_user_id, content) VALUES (?, ?, ?)',
+        [userData.id, to_user_id, content]
       );
+
+      // 받는 학생의 칭찬 개수 확인
+      const [praiseCountResult] = await connection.execute(
+        'SELECT COUNT(*) as count FROM praises WHERE to_user_id = ? AND is_deleted = 0',
+        [to_user_id]
+      );
+
+      const praiseCount = praiseCountResult[0].count;
+
+      // 최초 5개 칭찬은 자동 선택
+      if (praiseCount <= 5) {
+        await connection.execute(
+          'UPDATE praises SET is_selected = 1 WHERE id = ?',
+          [result.insertId]
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: '칭찬이 성공적으로 작성되었습니다',
+        praise_id: result.insertId,
+      });
+    } finally {
+      connection.release();
     }
-
-    // 칭찬 작성
-    const insertPraise = db.prepare(`
-      INSERT INTO praises (from_user_id, to_user_id, content)
-      VALUES (?, ?, ?)
-    `);
-
-    const result = insertPraise.run(userData.id, to_user_id, content);
-
-    // 받는 학생의 칭찬 개수 확인
-    const getPraiseCount = db.prepare(`
-      SELECT COUNT(*) as count FROM praises 
-      WHERE to_user_id = ? AND is_deleted = 0
-    `);
-    const praiseCount = getPraiseCount.get(to_user_id);
-
-    // 최초 5개 칭찬은 자동 선택
-    if (praiseCount.count <= 5) {
-      const updateSelection = db.prepare(`
-        UPDATE praises 
-        SET is_selected = 1 
-        WHERE id = ?
-      `);
-      updateSelection.run(result.lastInsertRowid);
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: '칭찬이 성공적으로 작성되었습니다',
-      praise_id: result.lastInsertRowid,
-    });
   } catch (error) {
     console.error('칭찬 작성 에러:', error);
     return NextResponse.json(
