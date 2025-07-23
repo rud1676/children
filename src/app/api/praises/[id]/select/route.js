@@ -58,7 +58,7 @@ export async function POST(request, { params }) {
       // 현재 선택 상태를 반전 (토글)
       const newSelectionState = praise.is_selected ? 0 : 1;
 
-      // 선택하려는 경우, 이미 선택된 칭찬이 5개 이상인지 확인
+      // 선택하려는 경우, 이미 선택된 칭찬 개수 확인
       if (newSelectionState === 1) {
         const [selectedCountResult] = await connection.execute(
           'SELECT COUNT(*) as count FROM praises WHERE to_user_id = ? AND is_selected = 1',
@@ -66,9 +66,12 @@ export async function POST(request, { params }) {
         );
         const selectedCount = selectedCountResult[0].count;
 
-        if (selectedCount >= 3) {
+        // 선생님은 최대 1개, 학생은 최대 3개
+        const maxAllowed = userData.role === 'teacher' ? 1 : 3;
+
+        if (selectedCount >= maxAllowed) {
           return NextResponse.json(
-            { error: '선택된 칭찬은 최대 3개까지 가능합니다' },
+            { error: `선택된 칭찬은 최대 ${maxAllowed}개까지 가능합니다` },
             { status: 400 }
           );
         }

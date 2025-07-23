@@ -39,7 +39,7 @@ export async function GET(request) {
         END as weighted_score
       FROM praises p
       LEFT JOIN users u ON p.from_user_id = u.id
-      WHERE p.from_user_id = ? AND p.is_deleted = 0
+      WHERE p.to_user_id = ? AND p.is_deleted = 0
       ORDER BY p.created_at DESC
     `,
       [userData.id]
@@ -57,7 +57,7 @@ export async function GET(request) {
               CASE 
                 WHEN EXISTS (
                   SELECT 1 FROM users u2 
-                  WHERE u2.id = p.to_user_id 
+                  WHERE u2.id = p.from_user_id 
                   AND u2.role = 'teacher'
                 ) THEN 2
                 ELSE 1
@@ -66,11 +66,10 @@ export async function GET(request) {
           END
         ) as total_weighted_score
       FROM praises p
-      WHERE p.from_user_id = ? AND p.is_deleted = 0
+      WHERE p.to_user_id = ? AND p.is_deleted = 0
     `,
       [userData.id]
     );
-
     connection.release();
 
     return NextResponse.json({
@@ -83,10 +82,13 @@ export async function GET(request) {
       },
     });
   } catch (error) {
+    connection.release();
+
     console.error('받은 칭찬 조회 에러:', error);
     return NextResponse.json(
       { error: '서버 오류가 발생했습니다' },
       { status: 500 }
     );
+  } finally {
   }
 }
