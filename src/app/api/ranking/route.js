@@ -9,8 +9,8 @@ export async function GET(request) {
     const connection = await pool.getConnection();
 
     try {
-      // 작성한 칭찬 중 선택받은 개수 순으로 랭킹 조회 (선생님 선택은 2점)
-      const [ranking] = await connection.execute(`
+      // 1단계: 기본 랭킹 조회 (작성한 칭찬 중 선택받은 개수 순)
+      const [basicRanking] = await connection.execute(`
         SELECT 
           u.id,
           u.name,
@@ -24,75 +24,67 @@ export async function GET(request) {
             CASE 
               WHEN p.is_selected = 1 AND p.is_deleted = 0 THEN
                 CASE 
-                  WHEN EXISTS (
-                    SELECT 1 FROM users u2 
-                    WHERE u2.id = p.to_user_id 
-                    AND u2.role = 'teacher'
-                  ) THEN 2
+                  WHEN to_user.role = 'teacher' THEN 2
                   ELSE 1
                 END
               ELSE 0
             END
-          ) as weighted_score,
-          ROW_NUMBER() OVER (ORDER BY 
-            SUM(
-              CASE 
-                WHEN p.is_selected = 1 AND p.is_deleted = 0 THEN
-                  CASE 
-                    WHEN EXISTS (
-                      SELECT 1 FROM users u2 
-                      WHERE u2.id = p.to_user_id 
-                      AND u2.role = 'teacher'
-                    ) THEN 2
-                    ELSE 1
-                  END
-                ELSE 0
-              END
-            ) DESC
-          ) as ranking_position
+          ) as weighted_score
         FROM users u
         LEFT JOIN praises p ON u.id = p.from_user_id AND p.is_deleted = 0
+        LEFT JOIN users to_user ON p.to_user_id = to_user.id
         WHERE u.role = 'student'
-        GROUP BY u.id
-        HAVING NOT (
-          COUNT(CASE WHEN p.is_deleted = 0 THEN 1 END) >= 5
-          AND
-          SUM(
-            CASE 
-              WHEN p.is_selected = 1 AND p.is_deleted = 0 THEN
-                CASE 
-                  WHEN EXISTS (
-                    SELECT 1 FROM users u2 
-                    WHERE u2.id = p.to_user_id 
-                    AND u2.role = 'teacher'
-                  ) THEN 2
-                  ELSE 1
-                END
-              ELSE 0
-            END
-          ) < 5
-        )
-        AND SUM(
-          CASE 
-            WHEN p.is_selected = 1 AND p.is_deleted = 0 THEN
-              CASE 
-                WHEN EXISTS (
-                  SELECT 1 FROM users u2 
-                    WHERE u2.id = p.to_user_id 
-                  AND u2.role = 'teacher'
-                ) THEN 2
-                ELSE 1
-              END
-            ELSE 0
-          END
-        ) > 0
+        GROUP BY u.id, u.name, u.school, u.grade, u.class_number, u.student_number, u.is_king
+        HAVING weighted_score > 0
         ORDER BY weighted_score DESC, u.name ASC
       `);
 
+      // 2단계: 각 학생의 받은 칭찬 중 학생이 쓴 것 개수와 선택한 칭찬 개수 조회
+      const validStudents = [];
+
+      for (const student of basicRanking) {
+        // 받은 칭찬 중 학생이 쓴 것 개수
+        const [receivedFromStudentsResult] = await connection.execute(
+          `
+          SELECT COUNT(*) as count
+          FROM praises p
+          JOIN users from_user ON p.from_user_id = from_user.id
+          WHERE p.to_user_id = ? 
+          AND p.is_deleted = 0 
+          AND from_user.role = 'student'
+        `,
+          [student.id]
+        );
+
+        const receivedFromStudents = receivedFromStudentsResult[0].count;
+
+        // 선택한 칭찬 개수
+        const [selectedPraisesResult] = await connection.execute(
+          `
+          SELECT COUNT(*) as count
+          FROM praises p
+          WHERE p.to_user_id = ? 
+          AND p.is_selected = 1 
+          AND p.is_deleted = 0
+        `,
+          [student.id]
+        );
+
+        const selectedPraises = selectedPraisesResult[0].count;
+
+        // 조건 확인: 받은 칭찬 중 학생이 쓴 것이 3개 미만이거나, 3개 이상이면 선택한 칭찬이 3개 이상이어야 함
+        if (
+          receivedFromStudents < 3 ||
+          (receivedFromStudents >= 3 && selectedPraises >= 3)
+        ) {
+          validStudents.push(student);
+        }
+      }
+
       return NextResponse.json({
         success: true,
-        ranking: ranking.map((student) => ({
-          rank: student.ranking_position,
+        ranking: validStudents.map((student, index) => ({
+          rank: index + 1,
           id: student.id,
           name: student.name,
           school: student.school,
