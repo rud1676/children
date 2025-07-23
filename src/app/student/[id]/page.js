@@ -179,9 +179,6 @@ export default function StudentDetailPage() {
         {/* 학생 정보 */}
         <div className='nature-light pixel-border rounded-lg p-6 mb-6'>
           <div className='flex items-center space-x-4'>
-            <div className='w-16 h-16 bg-green-500 rounded-full flex items-center justify-center'>
-              <User className='h-8 w-8 text-white' />
-            </div>
             <div>
               <h2 className='pixel-font text-xl text-green-800'>
                 {student.name}
@@ -194,20 +191,20 @@ export default function StudentDetailPage() {
               {writtenStats && (
                 <div className='flex items-center space-x-4 mt-2 pt-2 border-t border-green-200'>
                   <div className='flex items-center space-x-1'>
-                    <MessageSquare className='h-4 w-4 text-blue-500' />
-                    <span className='pixel-font text-sm text-blue-700'>
-                      작성한 칭찬: {writtenStats.totalCount}개
+                    <MessageSquare className='h-4 w-4 ' />
+                    <span className='pixel-font text-[10px] '>
+                      쓴 칭찬: {writtenStats.totalCount}개
                     </span>
                   </div>
                   <div className='flex items-center space-x-1'>
-                    <Heart className='h-4 w-4 text-purple-500' />
-                    <span className='pixel-font text-sm text-purple-700'>
+                    <Heart className='h-4 w-4' />
+                    <span className='pixel-font text-[10px] '>
                       선택받은 칭찬: {writtenStats.selectedCount}개
                     </span>
                   </div>
                   <div className='flex items-center space-x-1'>
-                    <span className='pixel-font text-sm text-purple-600'>
-                      선택률: {writtenStats.selectionRate}%
+                    <span className='pixel-font text-[10px] '>
+                      선택받은비율: {writtenStats.selectionRate}%
                     </span>
                   </div>
                 </div>
@@ -221,12 +218,15 @@ export default function StudentDetailPage() {
           <div className='flex items-center justify-between'>
             <h3 className='pixel-font text-lg text-green-800 flex items-center space-x-2'>
               <Heart className='h-5 w-5' />
-              <span>받은 칭찬 목록 ({praises.length}개)</span>
+              <span>
+                {' '}
+                {student.name}이 받은 칭찬 ({praises.length}개)
+              </span>
             </h3>
             {/* 삭제된 칭찬 보기 토글 */}
             <div className='flex items-center space-x-2'>
               <label className='flight-font text-sm text-green-700'>
-                삭제된 칭찬 보기
+                삭제 댓글
               </label>
               <button
                 onClick={() => setShowDeleted(!showDeleted)}
@@ -276,7 +276,7 @@ export default function StudentDetailPage() {
                             }월 ${koreanTime.getDate()}일 ${koreanTime.getHours()}시 ${koreanTime.getMinutes()}분`;
                           })()}
                         </span>
-                        {praise.is_selected && (
+                        {praise.is_selected === 1 && (
                           <div className='flex items-center space-x-1'>
                             <Heart className='h-3 w-3 text-red-500 fill-current' />
                             <span className='pixel-font text-xs text-red-600'>
@@ -284,26 +284,25 @@ export default function StudentDetailPage() {
                             </span>
                           </div>
                         )}
-                        {praise.is_deleted && (
-                          <div className='flex items-center space-x-1'>
-                            <Trash2 className='h-3 w-3 text-gray-500' />
-                            <span className='pixel-font text-xs text-gray-500'>
-                              삭제됨
-                            </span>
-                            {praise.delete_reason && (
-                              <span className='pixel-font text-xs text-gray-500'>
-                                {praise.delete_reason.length > 20
-                                  ? praise.delete_reason.substring(0, 20) +
-                                    '...'
-                                  : praise.delete_reason}
-                              </span>
-                            )}
-                          </div>
-                        )}
                       </div>
+                      {praise.is_deleted === 1 && (
+                        <div className='flex items-center space-x-1'>
+                          <Trash2 className='h-3 w-3 text-gray-500' />
+                          <span className='pixel-font text-xs text-gray-500'>
+                            삭제됨
+                          </span>
+                          {praise.delete_reason && (
+                            <span className='pixel-font text-xs text-gray-500'>
+                              {praise.delete_reason.length > 20
+                                ? praise.delete_reason.substring(0, 20) + '...'
+                                : praise.delete_reason}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
 
-                    {!praise.is_delseted && (
+                    {praise.is_deleted === 0 && (
                       <button
                         onClick={() => handleDeletePraise(praise.id)}
                         className='ml-4 p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors'
