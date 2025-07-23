@@ -42,12 +42,17 @@ export default function MainPage() {
     fetchData();
     fetchStaticAndRanking();
 
-    // 특정 유저(01012344321)일 때만 3초마다 랜덤 학생 교체
+    // 특정 유저(01012344321)일 때만 3초마다 랜덤 학생 교체 및 10초마다 알림 확인
     const currentUser = JSON.parse(userData);
     if (currentUser.phone_number === '01012344321') {
       const randomInterval = setInterval(() => {
         fetchData();
       }, 3000);
+
+      // 10초마다 알림 확인
+      const notificationInterval = setInterval(() => {
+        checkNotifications();
+      }, 10000);
 
       // 30초마다 랭킹과 통계만 업데이트 (학생 목록은 제외)
       const dataInterval = setInterval(() => {
@@ -56,6 +61,7 @@ export default function MainPage() {
 
       return () => {
         clearInterval(randomInterval);
+        clearInterval(notificationInterval);
         clearInterval(dataInterval);
       };
     }
@@ -148,6 +154,94 @@ export default function MainPage() {
 
   const handleWritePraise = () => {
     setShowWriteModal(true);
+  };
+
+  // 알림 확인 함수
+  const checkNotifications = async () => {
+    try {
+      const token = localStorage.getItem('token');
+
+      // 현재 시간 업데이트
+      // 5초 전의 시간을 ISO 문자열로 계산
+      const newTime = new Date(Date.now() - 10000).toISOString();
+      const response = await apiFetch(
+        `/api/notifications?lastChecked=${newTime}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success && data.alertUsers && data.alertUsers.length > 0) {
+        // 새로운 알림이 있으면 토스트 메시지 표시
+        showNotificationToast(data.alertUsers);
+      }
+    } catch (error) {
+      console.error('알림 확인 에러:', error);
+    }
+  };
+
+  // 알림 토스트 메시지 표시 함수
+  const showNotificationToast = (alertUsers) => {
+    console.log(alertUsers, '알람시작');
+    const toastId = toast.custom(
+      (t) => (
+        <div
+          className={`${
+            t.visible ? 'animate-enter' : 'animate-leave'
+          } max-w-md w-full bg-green-50 shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-green-200 ring-opacity-5`}
+        >
+          <div className='flex-1 w-0 p-4'>
+            <div className='flex items-start'>
+              <div className='flex-shrink-0'>
+                <div className='w-8 h-8 bg-green-500 rounded-full flex items-center justify-center'>
+                  <MessageSquare className='h-4 w-4 text-white' />
+                </div>
+              </div>
+              <div className='ml-3 flex-1'>
+                <p className='flight-font text-sm font-medium text-green-800'>
+                  새로운 칭찬이 작성되었습니다!
+                </p>
+                <p className='flight-font text-xs text-green-600 mt-1'>
+                  {alertUsers.length === 1
+                    ? `${alertUsers[0]}님이 칭찬을 작성했습니다.`
+                    : `${alertUsers[0]} 외 ${
+                        alertUsers.length - 1
+                      }명이 칭찬을 작성했습니다.`}
+                </p>
+              </div>
+            </div>
+            {/* 로딩 바 */}
+            <div className='mt-3 h-1 bg-green-200 rounded-full overflow-hidden'>
+              <div
+                className='h-full bg-green-500 transition-all duration-3000 ease-linear'
+                style={{
+                  width: '100%',
+                  animation: 'loadingBar 5s linear forwards',
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      ),
+      {
+        duration: 5000,
+        position: 'top-right',
+        style: {
+          background: 'transparent',
+          boxShadow: 'none',
+          padding: 0,
+        },
+      }
+    );
+
+    // 3초 후 자동으로 토스트 제거
+    setTimeout(() => {
+      toast.dismiss(toastId);
+    }, 5000);
   };
 
   // 학교 정보와 학년을 조합하여 표시 형식 생성
@@ -287,6 +381,45 @@ export default function MainPage() {
                 }
                 .animate-exp-bar {
                   animation: exp-bar 2s ease-in-out forwards;
+                }
+
+                @keyframes enter {
+                  0% {
+                    transform: translateX(100%);
+                    opacity: 0;
+                  }
+                  100% {
+                    transform: translateX(0);
+                    opacity: 1;
+                  }
+                }
+
+                @keyframes leave {
+                  0% {
+                    transform: translateX(0);
+                    opacity: 1;
+                  }
+                  100% {
+                    transform: translateX(100%);
+                    opacity: 0;
+                  }
+                }
+
+                .animate-enter {
+                  animation: enter 0.5s ease-out forwards;
+                }
+
+                .animate-leave {
+                  animation: leave 0.5s ease-in forwards;
+                }
+
+                @keyframes loadingBar {
+                  0% {
+                    width: 100%;
+                  }
+                  100% {
+                    width: 0%;
+                  }
                 }
               `}</style>
             </div>
