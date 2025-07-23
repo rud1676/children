@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { pool } from '../../../../../lib/database';
 import { verifyToken } from '../../../../../lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function DELETE(request, { params }) {
   try {
     const { id } = params;

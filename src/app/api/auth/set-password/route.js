@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { pool, bcrypt } from '../../../../lib/database';
 import { generateToken } from '../../../../lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request) {
   try {
     const { phone_number, password } = await request.json();

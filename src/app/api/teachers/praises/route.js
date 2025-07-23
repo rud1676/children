@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { pool } from '../../../../lib/database';
 import { getTokenFromRequest, verifyToken } from '../../../../lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 // 세션별로 선택된 선생님들을 저장하는 Map
 const sessionTeachers = new Map();
 
