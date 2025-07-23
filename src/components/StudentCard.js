@@ -41,7 +41,10 @@ export default function StudentCard({ student, isTeacher = false, onClick }) {
             }`}
           >
             {praise ? (
-              <p className='flight-font text-[14px] lg:text-[24px] text-green-800 leading-relaxed line-clamp-3 lg:line-clamp-2 break-words h-[70px]'>
+              <p
+                className='flight-font text-[14px] lg:text-[26px] 
+              font-bold text-green-800 leading-relaxed line-clamp-3 lg:line-clamp-2 break-words h-[76px]'
+              >
                 {praise.content}
               </p>
             ) : (
