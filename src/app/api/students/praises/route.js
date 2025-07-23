@@ -78,36 +78,49 @@ export async function GET(request) {
         // 특정 유저(01084412248)일 때: 세션 기반으로 1명씩 교체
         let currentSelectedStudents = sessionStudents.get(sessionId) || [];
 
-        // 첫 번째 호출이거나 선택된 학생이 8명 미만인 경우
+        // 첫 번째 호출이거나 선택된 학생이 18명 미만인 경우
         if (currentSelectedStudents.length === 0) {
-          // 랜덤으로 8명 선택
+          // 랜덤으로 18명 선택
           const shuffledStudents = allStudents.sort(() => Math.random() - 0.5);
           currentSelectedStudents = shuffledStudents
-            .slice(0, 8)
+            .slice(0, 15)
             .map((s) => s.id);
         } else {
-          // 기존 선택된 학생들 중 1명을 랜덤으로 제거하고 새로운 학생 1명 추가
-          const randomIndex = Math.floor(
-            Math.random() * currentSelectedStudents.length
-          );
-          const studentToRemove = currentSelectedStudents[randomIndex];
+          // 기존 선택된 학생들 중 3명을 랜덤으로 제거하고 새로운 학생 3명 추가
+          const studentsToRemove = [];
 
-          // 제거할 학생을 제외한 나머지 학생들
+          // 3명의 랜덤 인덱스 선택 (중복 방지)
+          while (
+            studentsToRemove.length < 3 &&
+            currentSelectedStudents.length > 0
+          ) {
+            const randomIndex = Math.floor(
+              Math.random() * currentSelectedStudents.length
+            );
+            if (!studentsToRemove.includes(randomIndex)) {
+              studentsToRemove.push(randomIndex);
+            }
+          }
+
+          // 제거할 학생들을 제외한 나머지 학생들
           const remainingStudents = allStudents.filter(
             (student) => !currentSelectedStudents.includes(student.id)
           );
 
-          // 새로운 학생 1명 랜덤 선택
-          const newStudent =
-            remainingStudents[
-              Math.floor(Math.random() * remainingStudents.length)
-            ];
+          // 새로운 학생 3명 랜덤 선택
+          const shuffledRemaining = remainingStudents.sort(
+            () => Math.random() - 0.5
+          );
+          const newStudents = shuffledRemaining.slice(0, 3);
 
-          // 기존 선택된 학생들에서 1명 제거하고 새로운 학생 추가
+          // 기존 선택된 학생들에서 3명 제거하고 새로운 학생 3명 추가
+          const updatedStudents = currentSelectedStudents.filter(
+            (_, index) => !studentsToRemove.includes(index)
+          );
+
           currentSelectedStudents = [
-            ...currentSelectedStudents.slice(0, randomIndex),
-            ...currentSelectedStudents.slice(randomIndex + 1),
-            newStudent.id,
+            ...updatedStudents,
+            ...newStudents.map((s) => s.id),
           ];
         }
 

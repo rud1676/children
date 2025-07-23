@@ -14,11 +14,13 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import StudentCard from '../components/StudentCard';
+import TeacherCard from '../components/TeacherCard';
 import WritePraiseModal from '../components/WritePraiseModal';
 import { apiFetch } from '../lib/config';
 
 export default function MainPage() {
   const [students, setStudents] = useState([]);
+  const [teachers, setTeachers] = useState([]);
   const [ranking, setRanking] = useState([]);
   const [statistics, setStatistics] = useState({});
   const [user, setUser] = useState(null);
@@ -93,12 +95,19 @@ export default function MainPage() {
         Math.random().toString(36).substring(2, 15);
     localStorage.setItem('sessionId', sessionId);
 
+    // 학생 데이터 가져오기
     const studentsRes = await apiFetch(
       `/api/students/praises?session=${sessionId}`
     );
-
     const studentsData = await studentsRes.json();
     const newStudents = Object.values(studentsData.students_with_praises);
+
+    // 선생님 데이터 가져오기
+    const teachersRes = await apiFetch(
+      `/api/teachers/praises?session=${sessionId}`
+    );
+    const teachersData = await teachersRes.json();
+    const newTeachers = Object.values(teachersData.teachers_with_praises);
 
     // 특정 유저일 때만 바뀐 학생 찾기
     if (user?.phone_number === '01012344321' && students.length > 0) {
@@ -124,11 +133,13 @@ export default function MainPage() {
         updatedStudents[removedIndex] = addedStudent;
 
         setStudents(updatedStudents);
+        setTeachers(newTeachers);
         return; // 여기서 함수 종료
       }
     }
 
     setStudents(newStudents);
+    setTeachers(newTeachers);
   };
 
   const handleLogout = () => {
@@ -141,6 +152,12 @@ export default function MainPage() {
   const handleStudentClick = (student) => {
     if (user?.role === 'teacher') {
       router.push(`/student/${student.student_info.id}`);
+    }
+  };
+
+  const handleTeacherClick = (teacher) => {
+    if (user?.role === 'teacher') {
+      router.push(`/student/${teacher.teacher_info.id}`);
     }
   };
 
@@ -205,7 +222,7 @@ export default function MainPage() {
                 <p className='flight-font text-sm font-medium text-green-800'>
                   새로운 칭찬이 작성되었습니다!
                 </p>
-                <p className='flight-font text-xs text-green-600 mt-1'>
+                <p className='flight-font text-[30px] text-green-600 mt-1'>
                   {alertUsers.length === 1
                     ? `${alertUsers[0]}님이 칭찬을 작성했습니다.`
                     : `${alertUsers[0]} 외 ${
@@ -318,8 +335,8 @@ export default function MainPage() {
           <div className='hidden lg:flex items-center mr-4'>
             <div className='nature-light pixel-border rounded-lg p-2 min-w-[530px] flex flex-col items-center shadow-sm bg-white/80 backdrop-blur-sm'>
               <div className='flex items-center space-x-1 mb-1'>
-                <Trophy className='h-4 w-4 text-yellow-500' />
-                <span className='font-sans text-base font-bold text-green-800'>
+                <Trophy className='h-6 w-6 lg:h-8 lg:w-8 text-yellow-500' />
+                <span className='font-sans text-[20px] lg:text-[40px] font-bold text-green-800'>
                   TOP 10
                 </span>
               </div>
@@ -327,17 +344,12 @@ export default function MainPage() {
                 {ranking.slice(0, 10).map((student, index) => (
                   <div
                     key={student.id}
-                    className='flex flex-col items-center justify-center w-12 h-16 bg-green-100 rounded px-0.5'
+                    className='flex flex-col items-center justify-center w-12 lg:w-[100px] bg-green-100 rounded p-2 lg:p-3'
                   >
-                    <div className='w-5 h-5 bg-green-500 rounded-full flex items-center justify-center mb-0.5'>
-                      <span className='font-sans text-[10px] text-white'>
-                        {index + 1}
-                      </span>
-                    </div>
-                    <p className='flight-font text-[10px] text-green-700 truncate w-full text-center'>
+                    <p className='flight-font text-[12px] lg:text-[25px] text-green-700 truncate w-full text-center'>
                       {student.name}
                     </p>
-                    <p className='flight-font text-[10px] text-green-600'>
+                    <p className='flight-font text-[10px] lg:text-[20px] text-green-600'>
                       {student.weighted_score}점
                     </p>
                   </div>
@@ -348,12 +360,12 @@ export default function MainPage() {
 
           {/* 제목 */}
           <div className=''>
-            <h1 className='flight-font-title text-[35px] text-green-800 mb-2 text-center'>
+            <h1 className='flight-font-title text-[30px] lg:text-[60px] text-green-800 mb-2 text-center'>
               레벨업: 리셋 에디션
             </h1>
             <div className='flex flex-col items-center mt-1'>
               <div className='flex items-center space-x-2 px-3 py-1 rounded-full bg-gradient-to-r from-green-200 via-yellow-100 to-green-100 shadow-inner border border-green-300'>
-                <span className='text-green-700 font-bold text-[20px] flight-font animate-pulse'>
+                <span className='text-green-700 font-bold text-[16px] lg:text-[30px] flight-font animate-pulse'>
                   칭찬으로 EXP 채우는 중…
                 </span>
                 <svg
@@ -429,9 +441,9 @@ export default function MainPage() {
           <div className='hidden lg:flex items-center ml-4'>
             <div className='nature-light pixel-border rounded-lg p-2 min-w-[180px] flex flex-col items-center shadow-sm bg-white/80 backdrop-blur-sm'>
               <div className='flex items-center space-x-1 mb-1'>
-                <Users className='h-4 w-4 text-green-600' />
-                <span className='flight-font-bold text-base text-green-800'>
-                  아직 누구에게도 칭찬하지 않는 학생
+                <Users className='h-6 w-6 lg:h-8 lg:w-8 text-green-600' />
+                <span className='flight-font-bold text-[16px] lg:text-[40px] text-green-800'>
+                  경험치 0점 목록
                 </span>
               </div>
               <div className='flex flex-wrap gap-1 justify-center'>
@@ -443,13 +455,13 @@ export default function MainPage() {
                       .map((student) => (
                         <span
                           key={student.id}
-                          className='flight-font text-xs text-green-600 bg-white/60 px-2 py-1 rounded'
+                          className='flight-font text-[12px] lg:text-[30px] text-green-600 bg-white/60 px-2 py-1 rounded'
                         >
                           {student.name}
                         </span>
                       ))}
                     {statistics.students_who_havent_written.length > 4 && (
-                      <span className='flight-font text-xs text-green-600 bg-white/60 px-2 py-1 rounded'>
+                      <span className='flight-font text-[12px] lg:text-[30px] text-green-600 bg-white/60 px-2 py-1 rounded'>
                         +
                         {Math.max(
                           0,
@@ -547,6 +559,34 @@ export default function MainPage() {
           ))}
         </div>
       </div>
+
+      {/* 선생님 카드 그리드 */}
+      {teachers.length > 0 && (
+        <div className='relative z-0 p-4'>
+          <div className='mb-4'>
+            <h2 className='flight-font-title text-2xl text-green-800 text-center mb-2'>
+              선생님들
+            </h2>
+            <div className='h-1 bg-green-200 rounded-full mx-auto max-w-md'>
+              <div
+                className='h-full bg-green-500 rounded-full'
+                style={{ width: '60%' }}
+              ></div>
+            </div>
+          </div>
+          <div className='grid-responsive mx-auto'>
+            {teachers.map((teacher, index) => (
+              <div key={teacher.teacher_info.id}>
+                <TeacherCard
+                  teacher={teacher}
+                  isTeacher={user?.role === 'teacher'}
+                  onClick={() => handleTeacherClick(teacher)}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 데스크톱 메뉴 - 화면 맨아래 오른쪽 */}
       <div className='hidden lg:block fixed bottom-4 right-4 z-50'>

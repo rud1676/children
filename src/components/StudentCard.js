@@ -21,7 +21,7 @@ export default function StudentCard({ student, isTeacher = false, onClick }) {
     >
       {/* 학생 정보 헤더 */}
       <div className='mb-4'>
-        <h3 className='text-[30px] font-bold text-green-800 flight-font'>
+        <h3 className='text-[18px] lg:text-[30px] font-bold text-green-800 flight-font'>
           {student_info.name} / {student_info.grade}
         </h3>
       </div>
@@ -41,12 +41,12 @@ export default function StudentCard({ student, isTeacher = false, onClick }) {
             }`}
           >
             {praise ? (
-              <p className='flight-font text-[24px] text-green-800 leading-relaxed line-clamp-2 break-words h-[70px]'>
+              <p className='flight-font text-[14px] lg:text-[24px] text-green-800 leading-relaxed line-clamp-3 lg:line-clamp-2 break-words h-[70px]'>
                 {praise.content}
               </p>
             ) : (
               <div className='flex items-center justify-center h-[70px]'>
-                <p className='flight-font text-[24px] text-gray-400'>
+                <p className='flight-font text-[14px] lg:text-[24px] text-gray-400'>
                   칭찬 없음
                 </p>
               </div>
