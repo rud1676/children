@@ -80,16 +80,23 @@ export async function POST(request) {
       );
 
       // 받는 사용자가 학생인 경우에만 자동 선택 로직 적용
-      if (toUsers[0].role === 'student') {
-        // 받는 학생의 칭찬 개수 확인
+      if (toUsers[0].role === 'student' && userData.role === 'student') {
+        // 받는 학생의 칭찬 중 학생이 쓴 것 개수 확인
         const [praiseCountResult] = await connection.execute(
-          'SELECT COUNT(*) as count FROM praises WHERE to_user_id = ? AND is_deleted = 0',
+          `
+          SELECT COUNT(*) as count 
+          FROM praises p
+          JOIN users from_user ON p.from_user_id = from_user.id
+          WHERE p.to_user_id = ? 
+          AND p.is_deleted = 0 
+          AND from_user.role = 'student'
+          `,
           [to_user_id]
         );
 
         const praiseCount = praiseCountResult[0].count;
 
-        // 최초 3개 칭찬은 자동 선택 (학생만)
+        // 최초 3개 칭찬은 자동 선택 (학생이 쓴 칭찬만)
         if (praiseCount <= 3) {
           await connection.execute(
             'UPDATE praises SET is_selected = 1 WHERE id = ?',

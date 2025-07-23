@@ -26,9 +26,14 @@ export async function POST(request, { params }) {
     const connection = await pool.getConnection();
 
     try {
-      // 칭찬 정보 조회
+      // 칭찬 정보 조회 (작성자 정보 포함)
       const [praises] = await connection.execute(
-        'SELECT * FROM praises WHERE id = ?',
+        `
+        SELECT p.*, u.role as from_user_role 
+        FROM praises p
+        LEFT JOIN users u ON p.from_user_id = u.id
+        WHERE p.id = ?
+        `,
         [id]
       );
 
