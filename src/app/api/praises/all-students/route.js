@@ -28,18 +28,22 @@ export async function GET(request) {
 
     // 모든 학생 조회
     const connection = await pool.getConnection();
-    const [students] = await connection.execute(`
-      SELECT id, name, school, grade, class_number, student_number
-      FROM users 
-      WHERE role = 'student'
-      ORDER BY school, grade, class_number, student_number
-    `);
-    connection.release();
 
-    return NextResponse.json({
-      success: true,
-      students,
-    });
+    try {
+      const [students] = await connection.execute(`
+        SELECT id, name, school, grade, class_number, student_number
+        FROM users 
+        WHERE role = 'student'
+        ORDER BY school, grade, class_number, student_number
+      `);
+
+      return NextResponse.json({
+        success: true,
+        students,
+      });
+    } finally {
+      connection.release();
+    }
   } catch (error) {
     console.error('학생 목록 조회 에러:', error);
     return NextResponse.json(

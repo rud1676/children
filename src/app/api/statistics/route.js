@@ -9,11 +9,26 @@ export async function GET(request) {
     const connection = await pool.getConnection();
 
     try {
-      // 전체 통계 조회
+      // 전체 통계 조회 (선택된 칭찬과 가중 점수 포함)
       const [totalStatsResult] = await connection.execute(`
         SELECT 
           COUNT(DISTINCT u.id) as total_students,
           COUNT(p.id) as total_praises,
+          COUNT(CASE WHEN p.is_selected = 1 AND p.is_deleted = 0 THEN 1 END) as total_selected_praises,
+          SUM(
+            CASE 
+              WHEN p.is_selected = 1 AND p.is_deleted = 0 THEN
+                CASE 
+                  WHEN EXISTS (
+                    SELECT 1 FROM users u2 
+                    WHERE u2.id = p.from_user_id 
+                    AND u2.role = 'teacher'
+                  ) THEN 2
+                  ELSE 1
+                END
+              ELSE 0
+            END
+          ) as total_weighted_score,
           COUNT(DISTINCT CASE WHEN p.id IS NULL THEN u.id END) as students_without_praises
         FROM users u
         LEFT JOIN praises p ON u.id = p.to_user_id AND p.is_deleted = 0
@@ -87,6 +102,8 @@ export async function GET(request) {
         success: true,
         total_students: totalStats.total_students,
         total_praises: totalStats.total_praises,
+        total_selected_praises: totalStats.total_selected_praises || 0,
+        total_weighted_score: totalStats.total_weighted_score || 0,
         students_without_praises: totalStats.students_without_praises,
         students_by_grade: studentsByGrade,
         students_by_class: studentsByClass,

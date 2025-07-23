@@ -25,15 +25,9 @@ export async function GET(request) {
               WHEN p.is_selected = 1 AND p.is_deleted = 0 THEN
                 CASE 
                   WHEN EXISTS (
-                    SELECT 1 FROM praises p2 
-                    WHERE p2.id = p.id 
-                    AND p2.is_selected = 1 
-                    AND p2.is_deleted = 0
-                    AND EXISTS (
-                      SELECT 1 FROM users u2 
-                      WHERE u2.id = p2.from_user_id 
-                      AND u2.role = 'teacher'
-                    )
+                    SELECT 1 FROM users u2 
+                    WHERE u2.id = p.to_user_id 
+                    AND u2.role = 'teacher'
                   ) THEN 2
                   ELSE 1
                 END
@@ -46,15 +40,9 @@ export async function GET(request) {
                 WHEN p.is_selected = 1 AND p.is_deleted = 0 THEN
                   CASE 
                     WHEN EXISTS (
-                      SELECT 1 FROM praises p2 
-                      WHERE p2.id = p.id 
-                      AND p2.is_selected = 1 
-                      AND p2.is_deleted = 0
-                      AND EXISTS (
-                        SELECT 1 FROM users u2 
-                        WHERE u2.id = p2.from_user_id 
-                        AND u2.role = 'teacher'
-                      )
+                      SELECT 1 FROM users u2 
+                      WHERE u2.id = p.to_user_id 
+                      AND u2.role = 'teacher'
                     ) THEN 2
                     ELSE 1
                   END
@@ -74,15 +62,9 @@ export async function GET(request) {
               WHEN p.is_selected = 1 AND p.is_deleted = 0 THEN
                 CASE 
                   WHEN EXISTS (
-                    SELECT 1 FROM praises p2 
-                    WHERE p2.id = p.id 
-                    AND p2.is_selected = 1 
-                    AND p2.is_deleted = 0
-                    AND EXISTS (
-                      SELECT 1 FROM users u2 
-                      WHERE u2.id = p2.from_user_id 
-                      AND u2.role = 'teacher'
-                    )
+                    SELECT 1 FROM users u2 
+                    WHERE u2.id = p.to_user_id 
+                    AND u2.role = 'teacher'
                   ) THEN 2
                   ELSE 1
                 END
@@ -95,15 +77,9 @@ export async function GET(request) {
             WHEN p.is_selected = 1 AND p.is_deleted = 0 THEN
               CASE 
                 WHEN EXISTS (
-                  SELECT 1 FROM praises p2 
-                  WHERE p2.id = p.id 
-                  AND p2.is_selected = 1 
-                  AND p2.is_deleted = 0
-                  AND EXISTS (
-                    SELECT 1 FROM users u2 
-                    WHERE u2.id = p2.from_user_id 
-                    AND u2.role = 'teacher'
-                  )
+                  SELECT 1 FROM users u2 
+                    WHERE u2.id = p.to_user_id 
+                  AND u2.role = 'teacher'
                 ) THEN 2
                 ELSE 1
               END

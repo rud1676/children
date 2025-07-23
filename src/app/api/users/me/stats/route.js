@@ -43,28 +43,68 @@ export async function GET(request) {
       );
       const writtenPraises = writtenPraisesResult[0];
 
-      // 전체 랭킹에서의 순위
+      // 전체 랭킹에서의 순위 (가중 점수 기준)
       const [allRankings] = await connection.execute(`
         SELECT 
           u.id,
           u.name,
-          COUNT(CASE WHEN p.is_selected = 1 THEN 1 END) as selected_count
+          COUNT(CASE WHEN p.is_selected = 1 AND p.is_deleted = 0 THEN 1 END) as selected_count,
+          SUM(
+            CASE 
+              WHEN p.is_selected = 1 AND p.is_deleted = 0 THEN
+                CASE 
+                  WHEN EXISTS (
+                    SELECT 1 FROM users u2 
+                    WHERE u2.id = p.from_user_id 
+                    AND u2.role = 'teacher'
+                  ) THEN 2
+                  ELSE 1
+                END
+              ELSE 0
+            END
+          ) as weighted_score
         FROM users u
         LEFT JOIN praises p ON u.id = p.to_user_id AND p.is_deleted = 0
         WHERE u.role = 'student'
         GROUP BY u.id, u.name
-        ORDER BY selected_count DESC, u.name ASC
+        HAVING weighted_score > 0
+        ORDER BY weighted_score DESC, u.name ASC
       `);
 
       // 현재 사용자의 순위 찾기
       const userRanking =
         allRankings.findIndex((rank) => rank.id === userData.id) + 1;
 
+      // 현재 사용자의 가중 점수 계산
+      const [userWeightedScoreResult] = await connection.execute(
+        `
+        SELECT 
+          SUM(
+            CASE 
+              WHEN p.is_selected = 1 AND p.is_deleted = 0 THEN
+                CASE 
+                  WHEN EXISTS (
+                    SELECT 1 FROM users u2 
+                    WHERE u2.id = p.from_user_id 
+                    AND u2.role = 'teacher'
+                  ) THEN 2
+                  ELSE 1
+                END
+              ELSE 0
+            END
+          ) as weighted_score
+        FROM praises p
+        WHERE p.to_user_id = ? AND p.is_deleted = 0
+      `,
+        [userData.id]
+      );
+
+      const userWeightedScore = userWeightedScoreResult[0].weighted_score || 0;
+
       return NextResponse.json({
         success: true,
-        received_praises: receivedPraises.count,
-        selected_praises: selectedPraises.count,
         written_praises: writtenPraises.count,
+        weighted_score: userWeightedScore,
         ranking: userRanking > 0 ? userRanking : null,
         total_students: allRankings.length,
       });

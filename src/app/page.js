@@ -244,7 +244,7 @@ export default function MainPage() {
                       {student.name}
                     </p>
                     <p className='flight-font text-[10px] text-green-600'>
-                      {student.selected_praises_count}점
+                      {student.weighted_score}점
                     </p>
                   </div>
                 ))}

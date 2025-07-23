@@ -170,15 +170,15 @@ export default function MyPraisesPage() {
                           → {praise.to_name || '알 수 없음'}
                         </span>
 
-                        {praise.is_selected && (
-                          <div className='flex items-center space-x-1'>
+                        {praise.is_selected === 1 && (
+                          <div className='flex items-center gap-1 '>
                             <Heart className='h-3 w-3 text-red-500 fill-current' />
-                            <span className='pixel-font text-xs text-red-600'>
+                            <span className='pixel-font text-xs text-red-600 leading-[100%]'>
                               선택됨
                             </span>
                           </div>
                         )}
-                        {praise.is_deleted && (
+                        {praise.is_deleted === 1 && (
                           <div className='flex items-center space-x-1'>
                             <Trash2 className='h-3 w-3 text-gray-500' />
                             <span className='pixel-font text-xs text-gray-500'>

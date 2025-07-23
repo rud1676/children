@@ -33,7 +33,7 @@ export async function POST(request) {
     try {
       // 받는 사용자 확인
       const [toUsers] = await connection.execute(
-        "SELECT * FROM users WHERE id = ? AND role = 'student'",
+        'SELECT * FROM users WHERE id = ?',
         [to_user_id]
       );
 
@@ -77,20 +77,23 @@ export async function POST(request) {
         ]
       );
 
-      // 받는 학생의 칭찬 개수 확인
-      const [praiseCountResult] = await connection.execute(
-        'SELECT COUNT(*) as count FROM praises WHERE to_user_id = ? AND is_deleted = 0',
-        [to_user_id]
-      );
-
-      const praiseCount = praiseCountResult[0].count;
-
-      // 최초 3개 칭찬은 자동 선택
-      if (praiseCount <= 3) {
-        await connection.execute(
-          'UPDATE praises SET is_selected = 1 WHERE id = ?',
-          [result.insertId]
+      // 받는 사용자가 학생인 경우에만 자동 선택 로직 적용
+      if (toUsers[0].role === 'student') {
+        // 받는 학생의 칭찬 개수 확인
+        const [praiseCountResult] = await connection.execute(
+          'SELECT COUNT(*) as count FROM praises WHERE to_user_id = ? AND is_deleted = 0',
+          [to_user_id]
         );
+
+        const praiseCount = praiseCountResult[0].count;
+
+        // 최초 3개 칭찬은 자동 선택 (학생만)
+        if (praiseCount <= 3) {
+          await connection.execute(
+            'UPDATE praises SET is_selected = 1 WHERE id = ?',
+            [result.insertId]
+          );
+        }
       }
 
       return NextResponse.json({

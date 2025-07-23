@@ -151,10 +151,10 @@ export default function MyPage() {
               <div className='grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-green-200'>
                 <div className='text-center'>
                   <p className='flight-font text-sm text-green-600 mb-1'>
-                    선택한 칭찬
+                    받은 점수
                   </p>
                   <p className='flight-font-bold text-2xl text-green-800'>
-                    {stats.selected_praises}개
+                    {stats.weighted_score}점
                   </p>
                 </div>
                 <div className='text-center'>
@@ -211,23 +211,21 @@ export default function MyPage() {
                       </div>
                     </div>
 
-                    {user?.role === 'student' && (
-                      <button
-                        onClick={() => handlePraiseSelect(praise.id)}
-                        className={`ml-4 p-2 rounded-lg transition-colors ${
-                          praise.is_selected
-                            ? 'bg-red-500 text-white hover:bg-red-600'
-                            : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                    <button
+                      onClick={() => handlePraiseSelect(praise.id)}
+                      className={`ml-4 p-2 rounded-lg transition-colors ${
+                        praise.is_selected
+                          ? 'bg-red-500 text-white hover:bg-red-600'
+                          : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                      }`}
+                      title={praise.is_selected ? '선택 해제' : '선택'}
+                    >
+                      <Heart
+                        className={`h-4 w-4 ${
+                          praise.is_selected ? 'fill-current' : ''
                         }`}
-                        title={praise.is_selected ? '선택 해제' : '선택'}
-                      >
-                        <Heart
-                          className={`h-4 w-4 ${
-                            praise.is_selected ? 'fill-current' : ''
-                          }`}
-                        />
-                      </button>
-                    )}
+                      />
+                    </button>
                   </div>
                 </motion.div>
               ))}
