@@ -191,19 +191,19 @@ export default function StudentDetailPage() {
               {writtenStats && (
                 <div className='flex items-center space-x-4 mt-2 pt-2 border-t border-green-200'>
                   <div className='flex items-center space-x-1'>
-                    <MessageSquare className='h-4 w-4 ' />
-                    <span className='pixel-font text-[10px] '>
+                    <MessageSquare className='h-4 w-4  text-black' />
+                    <span className='pixel-font text-[10px] text-black '>
                       쓴 칭찬: {writtenStats.totalCount}개
                     </span>
                   </div>
                   <div className='flex items-center space-x-1'>
-                    <Heart className='h-4 w-4' />
-                    <span className='pixel-font text-[10px] '>
+                    <Heart className='h-4 w-4 text-black' />
+                    <span className='pixel-font text-[10px] text-black '>
                       선택받은 칭찬: {writtenStats.selectedCount}개
                     </span>
                   </div>
                   <div className='flex items-center space-x-1'>
-                    <span className='pixel-font text-[10px] '>
+                    <span className='pixel-font text-[10px] text-black '>
                       선택받은비율: {writtenStats.selectionRate}%
                     </span>
                   </div>
