@@ -219,15 +219,15 @@ export default function MainPage() {
                 </div>
               </div>
               <div className='ml-3 flex-1'>
-                <p className='flight-font text-sm font-medium text-green-800'>
+                <p className='flight-font text-[20px] font-medium text-green-800'>
                   새로운 칭찬이 작성되었습니다!
                 </p>
                 <p className='flight-font text-[30px] text-green-600 mt-1'>
                   {alertUsers.length === 1
-                    ? `${alertUsers[0]}님이 칭찬을 작성했습니다.`
+                    ? `${alertUsers[0]}님이 칭찬을 받았습니다.`
                     : `${alertUsers[0]} 외 ${
                         alertUsers.length - 1
-                      }명이 칭찬을 작성했습니다.`}
+                      }명이 칭찬을 받았습니다.`}
                 </p>
               </div>
             </div>
