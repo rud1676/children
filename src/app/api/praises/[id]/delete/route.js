@@ -7,7 +7,16 @@ export const dynamic = 'force-dynamic';
 export async function DELETE(request, { params }) {
   try {
     const { id } = params;
-    const { reason } = await request.json();
+
+    // request body가 있는지 확인하고 안전하게 파싱
+    let reason = '';
+    try {
+      const body = await request.json();
+      reason = body.reason || '';
+    } catch (parseError) {
+      // request body가 없거나 잘못된 형식인 경우 빈 문자열로 처리
+      reason = '';
+    }
 
     // 토큰에서 사용자 정보 추출
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
