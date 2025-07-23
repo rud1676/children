@@ -33,6 +33,7 @@ export async function GET(request) {
           p.id as praise_id,
           p.content,
           p.is_selected,
+          p.is_teacher,
           p.created_at as praise_created_at
         FROM users u
         LEFT JOIN praises p ON u.id = p.to_user_id AND p.is_deleted = 0
@@ -63,6 +64,7 @@ export async function GET(request) {
             id: row.praise_id,
             content: row.content,
             is_selected: row.is_selected,
+            is_teacher: row.is_teacher,
             created_at: row.praise_created_at,
           });
         }
@@ -121,20 +123,46 @@ export async function GET(request) {
         selectedStudents = allStudents;
       }
 
-      // 선택된 칭찬만 필터링
-      const studentsWithSelectedPraises = selectedStudents.map((student) => ({
-        student_info: {
-          id: student.id,
-          name: student.name,
-          school: student.school,
-          grade: student.grade,
-          class_number: student.class_number,
-          student_number: student.student_number,
-        },
-        praises: student.praises
+      // 선택된 칭찬만 필터링하고, 3개 미만이면 선생님 칭찬으로 채우기
+      const studentsWithSelectedPraises = selectedStudents.map((student) => {
+        const selectedPraises = student.praises
           .filter((praise) => praise.is_selected)
-          .slice(0, 5), // 최대 5개까지만
-      }));
+          .slice(0, 3); // 최대 3개까지만
+
+        // 선택된 칭찬이 3개 미만인 경우 선생님 칭찬으로 채우기
+        if (selectedPraises.length < 3) {
+          const teacherPraises = student.praises
+            .filter((praise) => !praise.is_selected && praise.is_teacher)
+            .slice(0, 3 - selectedPraises.length); // 부족한 만큼만
+
+          // 선택된 칭찬과 선생님 칭찬을 합치기
+          const allPraises = [...selectedPraises, ...teacherPraises];
+
+          return {
+            student_info: {
+              id: student.id,
+              name: student.name,
+              school: student.school,
+              grade: student.grade,
+              class_number: student.class_number,
+              student_number: student.student_number,
+            },
+            praises: allPraises,
+          };
+        } else {
+          return {
+            student_info: {
+              id: student.id,
+              name: student.name,
+              school: student.school,
+              grade: student.grade,
+              class_number: student.class_number,
+              student_number: student.student_number,
+            },
+            praises: selectedPraises,
+          };
+        }
+      });
 
       return NextResponse.json({
         success: true,

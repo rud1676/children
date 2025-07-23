@@ -432,15 +432,13 @@ export default function MainPage() {
           >
             <MessageSquare className='h-5 w-5' />
           </button>
-          {user?.role === 'student' && (
-            <button
-              onClick={handleWritePraise}
-              className='p-3 bg-green-600/90 backdrop-blur-sm rounded-lg text-white hover:bg-green-700 transition-colors shadow-lg'
-              title='칭찬 작성'
-            >
-              <Plus className='h-5 w-5' />
-            </button>
-          )}
+          <button
+            onClick={handleWritePraise}
+            className='p-3 bg-green-600/90 backdrop-blur-sm rounded-lg text-white hover:bg-green-700 transition-colors shadow-lg'
+            title='칭찬 작성'
+          >
+            <Plus className='h-5 w-5' />
+          </button>
           <button
             onClick={handleLogout}
             className='p-3 bg-red-600/90 backdrop-blur-sm rounded-lg text-white hover:bg-red-700 transition-colors shadow-lg'

@@ -9,7 +9,7 @@ export async function GET(request) {
     const connection = await pool.getConnection();
 
     try {
-      // 작성한 칭찬 중 선택받은 개수 순으로 랭킹 조회
+      // 작성한 칭찬 중 선택받은 개수 순으로 랭킹 조회 (선생님 선택은 2점)
       const [ranking] = await connection.execute(`
         SELECT 
           u.id,
@@ -19,9 +19,49 @@ export async function GET(request) {
           u.class_number,
           u.student_number,
           u.is_king,
-          COUNT(CASE WHEN p.is_selected = 1 AND p.is_deleted = 0 THEN 1 END) as selected_praises_count,
           COUNT(CASE WHEN p.is_deleted = 0 THEN 1 END) as total_praises_count,
-          ROW_NUMBER() OVER (ORDER BY COUNT(CASE WHEN p.is_selected = 1 AND p.is_deleted = 0 THEN 1 END) DESC) as ranking_position
+          SUM(
+            CASE 
+              WHEN p.is_selected = 1 AND p.is_deleted = 0 THEN
+                CASE 
+                  WHEN EXISTS (
+                    SELECT 1 FROM praises p2 
+                    WHERE p2.id = p.id 
+                    AND p2.is_selected = 1 
+                    AND p2.is_deleted = 0
+                    AND EXISTS (
+                      SELECT 1 FROM users u2 
+                      WHERE u2.id = p2.from_user_id 
+                      AND u2.role = 'teacher'
+                    )
+                  ) THEN 2
+                  ELSE 1
+                END
+              ELSE 0
+            END
+          ) as weighted_score,
+          ROW_NUMBER() OVER (ORDER BY 
+            SUM(
+              CASE 
+                WHEN p.is_selected = 1 AND p.is_deleted = 0 THEN
+                  CASE 
+                    WHEN EXISTS (
+                      SELECT 1 FROM praises p2 
+                      WHERE p2.id = p.id 
+                      AND p2.is_selected = 1 
+                      AND p2.is_deleted = 0
+                      AND EXISTS (
+                        SELECT 1 FROM users u2 
+                        WHERE u2.id = p2.from_user_id 
+                        AND u2.role = 'teacher'
+                      )
+                    ) THEN 2
+                    ELSE 1
+                  END
+                ELSE 0
+              END
+            ) DESC
+          ) as ranking_position
         FROM users u
         LEFT JOIN praises p ON u.id = p.from_user_id AND p.is_deleted = 0
         WHERE u.role = 'student'
@@ -29,10 +69,48 @@ export async function GET(request) {
         HAVING NOT (
           COUNT(CASE WHEN p.is_deleted = 0 THEN 1 END) >= 5
           AND
-          COUNT(CASE WHEN p.is_selected = 1 AND p.is_deleted = 0 THEN 1 END) < 5
+          SUM(
+            CASE 
+              WHEN p.is_selected = 1 AND p.is_deleted = 0 THEN
+                CASE 
+                  WHEN EXISTS (
+                    SELECT 1 FROM praises p2 
+                    WHERE p2.id = p.id 
+                    AND p2.is_selected = 1 
+                    AND p2.is_deleted = 0
+                    AND EXISTS (
+                      SELECT 1 FROM users u2 
+                      WHERE u2.id = p2.from_user_id 
+                      AND u2.role = 'teacher'
+                    )
+                  ) THEN 2
+                  ELSE 1
+                END
+              ELSE 0
+            END
+          ) < 5
         )
-        AND COUNT(CASE WHEN p.is_selected = 1 AND p.is_deleted = 0 THEN 1 END) > 0
-        ORDER BY selected_praises_count DESC, u.name ASC
+        AND SUM(
+          CASE 
+            WHEN p.is_selected = 1 AND p.is_deleted = 0 THEN
+              CASE 
+                WHEN EXISTS (
+                  SELECT 1 FROM praises p2 
+                  WHERE p2.id = p.id 
+                  AND p2.is_selected = 1 
+                  AND p2.is_deleted = 0
+                  AND EXISTS (
+                    SELECT 1 FROM users u2 
+                    WHERE u2.id = p2.from_user_id 
+                    AND u2.role = 'teacher'
+                  )
+                ) THEN 2
+                ELSE 1
+              END
+            ELSE 0
+          END
+        ) > 0
+        ORDER BY weighted_score DESC, u.name ASC
       `);
 
       return NextResponse.json({
@@ -46,7 +124,7 @@ export async function GET(request) {
           class_number: student.class_number,
           student_number: student.student_number,
           is_king: student.is_king,
-          selected_praises_count: student.selected_praises_count || 0,
+          weighted_score: student.weighted_score || 0,
           total_praises_count: student.total_praises_count || 0,
         })),
       });

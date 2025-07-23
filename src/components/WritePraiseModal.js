@@ -112,12 +112,12 @@ export default function WritePraiseModal({ isOpen, onClose, onSuccess }) {
 
   // 학교 정보와 학년을 조합하여 표시 형식 생성
   const formatGradeInfo = (school, grade) => {
-    if (school.includes('고등학교')) {
+    if (school?.includes('고등학교')) {
       return `고${grade}`;
-    } else if (school.includes('중학교')) {
+    } else if (school?.includes('중학교')) {
       return `중${grade}`;
     }
-    return `${grade}학년`;
+    return `선생님`;
   };
 
   return (
@@ -179,7 +179,7 @@ export default function WritePraiseModal({ isOpen, onClose, onSuccess }) {
                           type='text'
                           value={searchTerm}
                           onChange={(e) => setSearchTerm(e.target.value)}
-                          placeholder='이름, 학교, 학년, 반으로 검색...'
+                          placeholder='이름, 학교, 학년, 조 등으로 검색...'
                           className='text-green-800 w-full pl-10 pr-4 py-3 border-2 border-green-300 rounded-lg focus:border-green-500 focus:outline-none bg-white/80 backdrop-blur-sm flight-font text-sm'
                         />
                       </div>
@@ -212,7 +212,8 @@ export default function WritePraiseModal({ isOpen, onClose, onSuccess }) {
                               </p>
                               <p className='flight-font text-xs text-green-600'>
                                 {formatGradeInfo(student.school, student.grade)}{' '}
-                                {student.class_number}반
+                                {student.role === 'student' &&
+                                  `/ ${student.class_number}조`}
                               </p>
                             </div>
                           </motion.button>
