@@ -5,6 +5,7 @@ import { generateToken } from '../../../../lib/auth';
 export const dynamic = 'force-dynamic';
 
 export async function POST(request) {
+  let connection;
   try {
     const { phone_number, password } = await request.json();
 
@@ -16,14 +17,13 @@ export async function POST(request) {
     }
 
     // 사용자 조회
-    const connection = await pool.getConnection();
+    connection = await pool.getConnection();
     const [users] = await connection.execute(
       'SELECT * FROM users WHERE phone_number = ?',
       [phone_number]
     );
 
     if (users.length === 0) {
-      connection.release();
       return NextResponse.json(
         { error: '등록되지 않은 핸드폰 번호입니다' },
         { status: 404 }
@@ -34,7 +34,6 @@ export async function POST(request) {
 
     // 이미 비밀번호가 설정되어 있는지 확인
     if (user.password) {
-      connection.release();
       return NextResponse.json(
         { error: '이미 비밀번호가 설정되어 있습니다' },
         { status: 400 }
@@ -49,8 +48,6 @@ export async function POST(request) {
       'UPDATE users SET password = ?, is_first_login = FALSE WHERE phone_number = ?',
       [hashedPassword, phone_number]
     );
-
-    connection.release();
 
     // 토큰 생성
     const token = generateToken(user);
@@ -76,5 +73,7 @@ export async function POST(request) {
       { error: '서버 오류가 발생했습니다' },
       { status: 500 }
     );
+  } finally {
+    if (connection) connection.release();
   }
 }

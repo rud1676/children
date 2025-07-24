@@ -5,8 +5,9 @@ import { pool } from '../../../lib/database';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
+  let connection;
   try {
-    const connection = await pool.getConnection();
+    connection = await pool.getConnection();
 
     try {
       // 전체 통계 조회 (선택된 칭찬과 가중 점수 포함)
@@ -133,5 +134,7 @@ export async function GET(request) {
       { error: '서버 오류가 발생했습니다' },
       { status: 500 }
     );
+  } finally {
+    connection.release();
   }
 }

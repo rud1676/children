@@ -5,6 +5,7 @@ import { verifyToken } from '../../../lib/auth';
 export const dynamic = 'force-dynamic';
 
 export async function POST(request) {
+  let connection;
   try {
     const { to_user_id, content } = await request.json();
 
@@ -30,7 +31,7 @@ export async function POST(request) {
       );
     }
 
-    const connection = await pool.getConnection();
+    connection = await pool.getConnection();
 
     try {
       // 받는 사용자 확인
@@ -111,7 +112,7 @@ export async function POST(request) {
         praise_id: result.insertId,
       });
     } finally {
-      connection.release();
+      if (connection) connection.release();
     }
   } catch (error) {
     console.error('칭찬 작성 에러:', error);
@@ -119,5 +120,7 @@ export async function POST(request) {
       { error: '서버 오류가 발생했습니다' },
       { status: 500 }
     );
+  } finally {
+    if (connection) connection.release();
   }
 }

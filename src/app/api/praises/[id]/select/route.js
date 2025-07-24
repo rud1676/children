@@ -5,6 +5,7 @@ import { verifyToken } from '../../../../../lib/auth';
 export const dynamic = 'force-dynamic';
 
 export async function POST(request, { params }) {
+  let connection;
   try {
     const { id } = params;
 
@@ -23,7 +24,7 @@ export async function POST(request, { params }) {
       );
     }
 
-    const connection = await pool.getConnection();
+    connection = await pool.getConnection();
 
     try {
       // 칭찬 정보 조회 (작성자 정보 포함)
@@ -98,7 +99,7 @@ export async function POST(request, { params }) {
         is_selected: newSelectionState === 1,
       });
     } finally {
-      connection.release();
+      if (connection) connection.release();
     }
   } catch (error) {
     console.error('칭찬 선택 처리 에러:', error);
@@ -106,5 +107,7 @@ export async function POST(request, { params }) {
       { error: '서버 오류가 발생했습니다' },
       { status: 500 }
     );
+  } finally {
+    if (connection) connection.release();
   }
 }

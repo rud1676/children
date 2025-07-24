@@ -5,8 +5,9 @@ import { pool } from '../../../lib/database';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
+  let connection;
   try {
-    const connection = await pool.getConnection();
+    connection = await pool.getConnection();
 
     try {
       // 1단계: 기본 랭킹 조회 (작성한 칭찬 중 선택받은 개수 순)
@@ -97,7 +98,7 @@ export async function GET(request) {
         })),
       });
     } finally {
-      connection.release();
+      if (connection) connection.release();
     }
   } catch (error) {
     console.error('랭킹 조회 에러:', error);
@@ -105,5 +106,7 @@ export async function GET(request) {
       { error: '서버 오류가 발생했습니다' },
       { status: 500 }
     );
+  } finally {
+    if (connection) connection.release();
   }
 }

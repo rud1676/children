@@ -5,6 +5,7 @@ import { verifyToken } from '../../../../lib/auth';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
+  let connection;
   try {
     // 토큰에서 사용자 정보 추출
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
@@ -29,7 +30,7 @@ export async function GET(request) {
     }
 
     // 모든 학생 조회
-    const connection = await pool.getConnection();
+    connection = await pool.getConnection();
 
     try {
       const [students] = await connection.execute(`
@@ -44,7 +45,7 @@ export async function GET(request) {
         students,
       });
     } finally {
-      connection.release();
+      if (connection) connection.release();
     }
   } catch (error) {
     console.error('학생 목록 조회 에러:', error);
@@ -52,5 +53,7 @@ export async function GET(request) {
       { error: '서버 오류가 발생했습니다' },
       { status: 500 }
     );
+  } finally {
+    if (connection) connection.release();
   }
 }

@@ -5,6 +5,7 @@ import { verifyToken } from '../../../../../lib/auth';
 export const dynamic = 'force-dynamic';
 
 export async function DELETE(request, { params }) {
+  let connection;
   try {
     const { id } = params;
 
@@ -33,26 +34,24 @@ export async function DELETE(request, { params }) {
       );
     }
 
-    // 선생님 권한 확인
-    if (userData.role !== 'teacher') {
-      return NextResponse.json(
-        { error: '선생님만 접근할 수 있습니다' },
-        { status: 403 }
-      );
-    }
-
     // 칭찬 정보 조회
-    const connection = await pool.getConnection();
+    connection = await pool.getConnection();
     const [praises] = await connection.execute(
       'SELECT * FROM praises WHERE id = ? AND is_deleted = 0',
       [id]
     );
 
     if (praises.length === 0) {
-      connection.release();
       return NextResponse.json(
         { error: '칭찬을 찾을 수 없습니다' },
         { status: 404 }
+      );
+    }
+
+    if (praises[0].from_user_id !== userData.id) {
+      return NextResponse.json(
+        { error: '본인의 칭찬만 삭제할 수 있습니다' },
+        { status: 403 }
       );
     }
 
@@ -61,8 +60,6 @@ export async function DELETE(request, { params }) {
       'UPDATE praises SET is_deleted = 1, deleted_by = ?, delete_reason = ? WHERE id = ?',
       [userData.id, reason, id]
     );
-
-    connection.release();
 
     return NextResponse.json({
       success: true,
@@ -74,5 +71,7 @@ export async function DELETE(request, { params }) {
       { error: '서버 오류가 발생했습니다' },
       { status: 500 }
     );
+  } finally {
+    if (connection) connection.release(); // ✅ 연결 해제 안전하게
   }
 }

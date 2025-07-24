@@ -11,6 +11,7 @@ import {
   User,
   MessageSquare,
   Plus,
+  BookOpen,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import StudentCard from '../components/StudentCard';
@@ -59,7 +60,7 @@ export default function MainPage() {
       // 30초마다 랭킹과 통계만 업데이트 (학생 목록은 제외)
       const dataInterval = setInterval(() => {
         fetchStaticAndRanking();
-      }, 30000);
+      }, 10000);
 
       return () => {
         clearInterval(randomInterval);
@@ -222,7 +223,7 @@ export default function MainPage() {
                 <p className='flight-font text-[20px] font-medium text-green-800'>
                   새로운 칭찬이 작성되었습니다!
                 </p>
-                <p className='flight-font text-[30px] text-green-600 mt-1'>
+                <p className='flight-font text-[25px] text-green-600 mt-1'>
                   {alertUsers.length === 1
                     ? `${alertUsers[0]}님이 칭찬을 받았습니다.`
                     : `${alertUsers[0]} 외 ${
@@ -337,11 +338,11 @@ export default function MainPage() {
               <div className='flex items-center space-x-1 mb-1'>
                 <Trophy className='h-6 w-6 lg:h-8 lg:w-8 text-yellow-500' />
                 <span className='font-sans text-[20px] lg:text-[40px] font-bold text-green-800'>
-                  TOP 10
+                  TOP 7
                 </span>
               </div>
-              <div className='grid grid-cols-[repeat(10,minmax(0,1fr))] gap-1 w-full'>
-                {ranking.slice(0, 10).map((student, index) => (
+              <div className='grid grid-cols-[repeat(7,minmax(0,1fr))] gap-1 w-full'>
+                {ranking.slice(0, 7).map((student, index) => (
                   <div
                     key={student.id}
                     className='flex flex-col items-center justify-center w-12 lg:w-[100px] bg-green-100 rounded p-2 lg:p-3'
@@ -363,6 +364,9 @@ export default function MainPage() {
             <h1 className='flight-font-title text-[30px] lg:text-[60px] text-green-800 mb-2 text-center'>
               레벨업: 리셋 에디션
             </h1>
+            {user && user.phone_number === '01012344321' && (
+              <img src='/images/logo.png' alt='logo' className='w-10 h-10' />
+            )}
             <div className='flex flex-col items-center mt-1'>
               <div className='flex items-center space-x-2 px-3 py-1 rounded-full bg-gradient-to-r from-green-200 via-yellow-100 to-green-100 shadow-inner border border-green-300'>
                 <span className='text-green-700 font-bold text-[16px] lg:text-[30px] flight-font animate-pulse'>
@@ -530,6 +534,18 @@ export default function MainPage() {
                   <LogOut className='h-4 w-4' />
                   <span className='flight-font text-sm'>로그아웃</span>
                 </button>
+                <button
+                  onClick={() => {
+                    window.open(
+                      'https://www.miricanvas.com/v/1414m11',
+                      '_blank'
+                    );
+                  }}
+                  className='flex items-center space-x-2 w-full p-2 hover:bg-red-100 rounded text-blue-600'
+                >
+                  <BookOpen className='h-4 w-4' />
+                  <span className='flight-font text-sm'>규칙확인</span>
+                </button>
               </div>
             </motion.div>
           )}
@@ -563,17 +579,6 @@ export default function MainPage() {
       {/* 선생님 카드 그리드 */}
       {teachers.length > 0 && (
         <div className='relative z-0 p-4'>
-          <div className='mb-4'>
-            <h2 className='flight-font-title text-2xl text-green-800 text-center mb-2'>
-              선생님들
-            </h2>
-            <div className='h-1 bg-green-200 rounded-full mx-auto max-w-md'>
-              <div
-                className='h-full bg-green-500 rounded-full'
-                style={{ width: '60%' }}
-              ></div>
-            </div>
-          </div>
           <div className='grid-responsive mx-auto'>
             {teachers.map((teacher, index) => (
               <div key={teacher.teacher_info.id}>

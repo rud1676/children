@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 const sessionTeachers = new Map();
 
 export async function GET(request) {
+  let connection;
   try {
     const { searchParams } = new URL(request.url);
     const sessionId = searchParams.get('session') || 'default';
@@ -20,7 +21,7 @@ export async function GET(request) {
     // 특정 유저(01012344321)인지 확인
     const isSpecialUser = userPhone === '01012344321';
 
-    const connection = await pool.getConnection();
+    connection = await pool.getConnection();
 
     try {
       // 모든 선생님 정보와 칭찬을 가져오기 (관리자 제외)
@@ -85,7 +86,7 @@ export async function GET(request) {
           // 랜덤으로 5명 선택
           const shuffledTeachers = allTeachers.sort(() => Math.random() - 0.5);
           currentSelectedTeachers = shuffledTeachers
-            .slice(0, 5)
+            .slice(0, 4)
             .map((t) => t.id);
         } else {
           // 기존 선택된 선생님들 중 1명을 랜덤으로 제거하고 새로운 선생님 1명 추가
@@ -150,7 +151,7 @@ export async function GET(request) {
         total_teachers: allTeachers.length,
       });
     } finally {
-      connection.release();
+      if (connection) connection.release();
     }
   } catch (error) {
     console.error('선생님 칭찬 조회 오류:', error);
@@ -158,5 +159,7 @@ export async function GET(request) {
       { success: false, error: '선생님 칭찬을 불러오는데 실패했습니다.' },
       { status: 500 }
     );
+  } finally {
+    if (connection) connection.release();
   }
 }

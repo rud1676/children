@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 const sessionStudents = new Map();
 
 export async function GET(request) {
+  let connection;
   try {
     const { searchParams } = new URL(request.url);
     const sessionId = searchParams.get('session') || 'default';
@@ -20,7 +21,7 @@ export async function GET(request) {
     // 특정 유저(01012344321)인지 확인
     const isSpecialUser = userPhone === '01012344321';
 
-    const connection = await pool.getConnection();
+    connection = await pool.getConnection();
 
     try {
       // 모든 학생 정보와 칭찬을 가져오기
@@ -80,12 +81,12 @@ export async function GET(request) {
         // 특정 유저(01084412248)일 때: 세션 기반으로 1명씩 교체
         let currentSelectedStudents = sessionStudents.get(sessionId) || [];
 
-        // 첫 번째 호출이거나 선택된 학생이 18명 미만인 경우
+        // 첫 번째 호출이거나 선택된 학생이 8명 미만인 경우
         if (currentSelectedStudents.length === 0) {
-          // 랜덤으로 18명 선택
+          // 랜덤으로 8명 선택
           const shuffledStudents = allStudents.sort(() => Math.random() - 0.5);
           currentSelectedStudents = shuffledStudents
-            .slice(0, 15)
+            .slice(0, 8)
             .map((s) => s.id);
         } else {
           // 기존 선택된 학생들 중 3명을 랜덤으로 제거하고 새로운 학생 3명 추가
@@ -193,5 +194,7 @@ export async function GET(request) {
       { success: false, error: '학생 칭찬을 불러오는데 실패했습니다.' },
       { status: 500 }
     );
+  } finally {
+    connection.release();
   }
 }

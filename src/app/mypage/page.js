@@ -11,6 +11,7 @@ export default function MyPage() {
   const [user, setUser] = useState(null);
   const [praises, setPraises] = useState([]);
   const [stats, setStats] = useState(null);
+  const [score, setScore] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
@@ -41,6 +42,7 @@ export default function MyPage() {
 
       if (data.success) {
         setPraises(data.praises);
+        setScore(data.stats.total_weighted_score);
       } else {
         toast.error('칭찬을 불러오는데 실패했습니다.');
       }
@@ -96,7 +98,7 @@ export default function MyPage() {
       </div>
     );
   }
-
+  console.log(praises);
   return (
     <div className='min-h-screen nature-green relative overflow-hidden'>
       {/* 네잎클로버 배경 */}
@@ -154,7 +156,7 @@ export default function MyPage() {
                     받은 점수
                   </p>
                   <p className='flight-font-bold text-2xl text-green-800'>
-                    {stats.weighted_score}점
+                    {score}점
                   </p>
                 </div>
                 <div className='text-center'>
