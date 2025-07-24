@@ -330,8 +330,8 @@ export default function MainPage() {
       </div>
 
       {/* 헤더 */}
-      <div className='relative z-10 p-4'>
-        <div className='flex items-center justify-between mb-6'>
+      <div className='relative z-10 p-4 pb-0'>
+        <div className='flex items-center justify-between mb-0'>
           {/* 랭킹 카드 (PC) */}
           <div className='hidden lg:flex items-center mr-4'>
             <div className='nature-light pixel-border rounded-lg p-2 min-w-[530px] flex flex-col items-center shadow-sm bg-white/80 backdrop-blur-sm'>
@@ -361,15 +361,13 @@ export default function MainPage() {
 
           {/* 제목 */}
           <div className=''>
-            <h1 className='flight-font-title text-[30px] lg:text-[60px] text-green-800 mb-2 text-center'>
+            <h1 className='flight-font-title text-[30px] lg:text-[50px] text-green-800 mb-2 text-center'>
               레벨업: 리셋 에디션
             </h1>
-            {user && user.phone_number === '01012344321' && (
-              <img src='/images/logo.png' alt='logo' className='w-10 h-10' />
-            )}
+
             <div className='flex flex-col items-center mt-1'>
               <div className='flex items-center space-x-2 px-3 py-1 rounded-full bg-gradient-to-r from-green-200 via-yellow-100 to-green-100 shadow-inner border border-green-300'>
-                <span className='text-green-700 font-bold text-[16px] lg:text-[30px] flight-font animate-pulse'>
+                <span className='text-green-700 font-bold text-[16px] lg:text-[25px] flight-font animate-pulse'>
                   칭찬으로 EXP 채우는 중…
                 </span>
                 <svg
@@ -440,7 +438,17 @@ export default function MainPage() {
               `}</style>
             </div>
           </div>
-
+          {user && user.phone_number === '01012344321' && (
+            <img
+              src='/qr.png'
+              alt='logo'
+              style={{
+                width: '230px',
+                height: '230px',
+                objectFit: 'contain',
+              }}
+            />
+          )}
           {/* 미칭찬 카드 (PC) */}
           <div className='hidden lg:flex items-center ml-4'>
             <div className='nature-light pixel-border rounded-lg p-2 min-w-[180px] flex flex-col items-center shadow-sm bg-white/80 backdrop-blur-sm'>
