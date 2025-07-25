@@ -196,11 +196,7 @@ export default function MyPage() {
                       </p>
                       <div className='flex items-center space-x-4'>
                         <span className='pixel-font text-xs text-green-600'>
-                          {user?.role === 'student'
-                            ? praise.from_role === 'student'
-                              ? '익명'
-                              : praise.from_name
-                            : praise.from_name}
+                          {user?.role === 'student' ? '익명' : praise.from_name}
                         </span>
                         <span className='pixel-font text-xs text-green-500'>
                           {(() => {
